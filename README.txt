@@ -1,4 +1,9 @@
-~/btsapi
+Boda Telecom Suite  API Server
+
+
+Folder structure
+--------------------------------
+btsapi
     |-- run.py
     |-- config.py
 	|-- tests 			 	# Tests

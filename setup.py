@@ -6,12 +6,15 @@ setup(
     include_package_data=True,
     install_requires=[
         'flask',
-		'flask-sqlalchemy'
+        'flask-sqlalchemy',
+        'flask-jsontools',
+        'flask-marshmallow',
+        'marshmallow-sqlalchemy'
     ],
-	setup_requires=[
+    setup_requires=[
         'pytest-runner',
     ],
-	tests_require=[
+    tests_require=[
         'pytest',
     ],
 )
