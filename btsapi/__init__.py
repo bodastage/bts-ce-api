@@ -21,7 +21,6 @@ def add_cors(resp):
     """ Ensure all responses have the CORS headers. This ensures any failures are also accessible
         by the client. """
 
-    app.logger.info(request.headers)
     resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin','*')
     resp.headers['Access-Control-Allow-Credentials'] = 'true'
     resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
@@ -30,7 +29,21 @@ def add_cors(resp):
     # set low for debugging
     # if app.debug:
     #    resp.headers['Access-Control-Max-Age'] = '1'
+
     return resp
+
+
+# Intercept pre-flight requests
+@app.before_request
+def handle_options_header():
+    if request.method == 'OPTIONS':
+        headers = {}
+        headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+        headers['Access-Control-Allow-Credentials'] = 'true'
+        headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
+        headers['Access-Control-Allow-Headers'] = request.headers.get(
+            'Access-Control-Request-Headers', 'Authorization')
+        return ('', 200, headers)
 
 
 # TP error handling
