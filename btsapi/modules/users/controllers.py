@@ -1,0 +1,68 @@
+from flask import Blueprint, request, render_template, \
+                  flash, g, session, redirect, url_for, \
+                  jsonify, make_response
+from btsapi.modules.users.models import User, UserSchema
+from btsapi import app, db
+import datetime
+
+mod_users = Blueprint('users', __name__, url_prefix='/api/users')
+
+
+@mod_users.route('/', methods=['GET'])
+def get_users():
+    """Get a list of all the users in the system"""
+
+    ma_schema = UserSchema()
+
+    return jsonify( [ma_schema.dump(v).data for v in User.query.all()] )
+
+
+@mod_users.route('/<int:id>', methods=['GET'])
+def get_user(id):
+    """Get vendor details"""
+
+    ma_schema = UserSchema()
+
+    return jsonify(ma_schema.dump(User.query.get(id)).data)
+
+
+@mod_users.route('/<int:id>', methods=['PUT'])
+def update_user(id):
+    """Update user details"""
+    content = request.get_json()
+    user = User.query.filter_by(pk=id).first()
+
+    # @TODO: Throw exception if an attempt to change the user name is made here
+
+    if "first_name" in content: user.first_name = content['first_name']
+    if "last_name" in content: user.last_name = content['last_name']
+    if "other_names" in content: user.other_names = content['other_names']
+    if "phone_number" in content: user.first_name = content['phone_number']
+    if "photo" in content: user.photo = content['photo']
+    if "password" in content: user.photo = content['password']
+
+    db.session.commit()
+
+    return jsonify({})
+
+
+@mod_users.route('/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    """Delete user"""
+    User.query.filter_by(pk=id).delete()
+
+    db.session.commit()
+
+    return jsonify({"status":"OK"})
+
+
+@mod_users.route('/', methods=['POST'])
+def add_user():
+    """Add a user"""
+    content = request.get_json()
+    user = User(content['name'], content['notes'], content['added_by'], content['modified_by'],)
+
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({"status":"OK"})

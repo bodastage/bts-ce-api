@@ -27,6 +27,8 @@ ma = Marshmallow(app)
 
 # Import modules using the blueprint handlers variable (mod_vendors)
 from btsapi.modules.vendors.controllers import mod_vendors as vendors_module
+from btsapi.modules.users.controllers import mod_users as mod_users
 
 # Register blueprint(s)
 app.register_blueprint(vendors_module)
+app.register_blueprint(mod_users)

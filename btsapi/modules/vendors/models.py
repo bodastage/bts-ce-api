@@ -8,7 +8,7 @@ class Vendor(db.Model):
 
     __tablename__ = 'vendors'
 
-    pk = db.Column(db.Integer,  db.Sequence('seq_vendors_pk',), primary_key=True )
+    pk = db.Column(db.Integer,  db.Sequence('seq_vendors_pk',), primary_key=True, nullable=False )
     name = db.Column(db.String(255), unique=True, nullable=False)
     notes = db.Column(db.Text)
     modified_by = db.Column(db.Integer)
@@ -21,6 +21,7 @@ class Vendor(db.Model):
         self.notes = notes
         self.modified_by = modified_by
         self.added_by = added_by
+
 
 class VendorSchema(ma.ModelSchema):
     """Flask Marshmallow Schema for Vendor model"""
