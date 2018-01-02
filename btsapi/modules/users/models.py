@@ -21,6 +21,20 @@ class User(db.Model):
     is_account_non_locked = db.Column(db.Boolean, default=True)
     is_enabled = db.Column(db.Boolean, default=True)
 
+    def __init__(self,username, password,first_name, last_name,other_names, phone_number, photo, job_title, token,
+                 is_account_non_expired, is_account_non_locked, is_enabled):
+        self.username = username
+        self.password = password
+        self.first_name = first_name
+        self.last_name = last_name
+        self.other_names = other_names
+        self.phone_number = phone_number
+        self.photo = photo
+        self.job_title = job_title
+        self.token = token
+        self.is_account_non_expired = is_account_non_expired
+        self.is_account_non_locked = is_account_non_locked
+        self.is_enabled = is_enabled
 
 class UserSchema(ma.ModelSchema):
     """Flask Marshmallow Schema for Vendor model"""

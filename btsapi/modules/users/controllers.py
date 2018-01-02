@@ -60,7 +60,18 @@ def delete_user(id):
 def add_user():
     """Add a user"""
     content = request.get_json()
-    user = User(content['name'], content['notes'], content['added_by'], content['modified_by'],)
+
+    user = User(username=content['username'],
+                first_name=content['first_name'],
+                last_name=content['last_name'],
+                other_names=content['other_names'],
+                phone_number=content['phone_number'],
+                job_title=content['job_title'],
+                is_account_non_expired=content['is_account_non_expired'],
+                is_account_non_locked=content['is_account_non_locked'],
+                is_enabled=content['is_enabled'],
+                token=content['token'],
+                photo=content['photo'],)
 
     db.session.add(user)
     db.session.commit()
