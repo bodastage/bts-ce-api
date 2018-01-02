@@ -12,7 +12,8 @@ setup(
         'marshmallow-sqlalchemy',
         'flask-bcrypt',
         'flask-testing',
-        'flask-cors'
+        'flask-cors',
+        'sqlalchemy-datatables'
     ],
     setup_requires=[
         'pytest-runner',

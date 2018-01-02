@@ -12,18 +12,20 @@ mod_auth = Blueprint('authetication', __name__, url_prefix='/authenticate')
 
 @mod_auth.route('/', methods=['POST'])
 def authenticate_user():
-    """Get a list of all the users in the system"""
-    username = request.headers.get('x-auth-username')
+    """Authenticate user"""
+    username = request.headers.get('x-Auth-username')
     password = request.headers.get('X-Auth-Password')
     user = User.query.filter_by(username=username, password=password).first()
 
-    app.logger.info("headers: {}".format(request.headers))
-    app.logger.info("username: {}".format(username))
-    app.logger.info("password: {}".format(password))
-
     if user is not None:
         ma_schema = UserSchema()
+        user_data = ma_schema.dump(user).data
+        user_data['id'] = user.pk
+        user_data['token'] = user.token
 
-        return jsonify(ma_schema.dump(user).data)
+        del user_data['pk']
+
+        app.logger.info(user_data)
+        return jsonify(user_data)
     else:
-        return jsonify({"message":"Invalide credentials"})
+        return jsonify({"message":"Invalid credentials"}),404

@@ -64,8 +64,10 @@ ma = Marshmallow(app)
 from btsapi.modules.vendors.controllers import mod_vendors as vendors_module
 from btsapi.modules.users.controllers import mod_users as mod_users
 from btsapi.modules.authentication.controllers import mod_auth as mod_auth
+from btsapi.modules.networkbaseline.controllers import mod_networkbaseline as mod_networkbaseline
 
 # Register blueprint(s)
 app.register_blueprint(vendors_module)
 app.register_blueprint(mod_users)
 app.register_blueprint(mod_auth)
+app.register_blueprint(mod_networkbaseline)
