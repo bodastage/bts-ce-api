@@ -1,15 +1,13 @@
-# Import flask dependencies
 from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
                   jsonify, make_response
 from btsapi.modules.vendors.models import Vendor, VendorSchema
-from btsapi import app
+from btsapi import app, db
+import datetime
 
-# Define the blueprint: 'auth', set its url prefix: app.url/auth
 mod_vendors = Blueprint('vendors', __name__, url_prefix='/api/vendors')
 
 
-# Set the route and accepted methods
 @mod_vendors.route('/', methods=['GET'])
 def get_vendors():
     """Get a list of all the vendors in the system"""
@@ -29,17 +27,35 @@ def get_vendor(id):
 
 
 @mod_vendors.route('/<int:id>', methods=['PUT'])
-def update_vendor():
+def update_vendor(id):
     """Update vendor details"""
-    pass
+    content = request.get_json()
+    vendor = Vendor.query.filter_by(pk=id).first()
+
+    if "name" in content: vendor.name = content['name']
+    if "notes" in content: vendor.notes = content['notes']
+    db.session.commit()
+
+    return jsonify({})
 
 
 @mod_vendors.route('/<int:id>', methods=['DELETE'])
-def delete_vendor():
+def delete_vendor(id):
     """Delete vendor"""
-    pass
+    Vendor.query.filter_by(pk=id).delete()
+
+    db.session.commit()
+
+    return jsonify({"status":"OK"})
+
 
 @mod_vendors.route('/', methods=['POST'])
 def add_vendor():
     """Add a vendor"""
-    pass
+    content = request.get_json()
+    vendor = Vendor(content['name'], content['notes'], content['added_by'], content['modified_by'],)
+
+    db.session.add(vendor)
+    db.session.commit()
+
+    return jsonify({"status":"OK"})

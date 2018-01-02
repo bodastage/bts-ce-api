@@ -9,7 +9,9 @@ setup(
         'flask-sqlalchemy',
         'flask-jsontools',
         'flask-marshmallow',
-        'marshmallow-sqlalchemy'
+        'marshmallow-sqlalchemy',
+        'flask-bcrypt',
+        'Flask-Testing  '
     ],
     setup_requires=[
         'pytest-runner',
