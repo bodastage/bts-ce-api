@@ -11,9 +11,7 @@ mod_networkbaseline = Blueprint('networkbaseline', __name__, url_prefix='/api/ne
 
 @mod_networkbaseline.route('/dt/', methods=['GET'])
 def get_dt_data():
-    """Get baseline values in datatables format"""
-
-    app.logger.info("NetworkBaselineView.vendor:{}".format(NetworkBaselineView.vendor))
+    """Get baseline values in jQuery datatables format"""
 
     # Define columns
     columns = [
@@ -38,3 +36,9 @@ def get_dt_data():
     return jsonify(row_table.output_result())
 
 
+@mod_networkbaseline.route('/tree/<int:parent_pk>', methods=['GET'])
+def get_aci_tree_data(parent_pk):
+    """Get baseline values"""
+
+    # @TODO: Add pagination
+    pass
