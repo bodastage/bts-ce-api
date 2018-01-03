@@ -4,7 +4,9 @@ from flask import Blueprint, request, render_template, \
 from btsapi.modules.vendors.models import Vendor, VendorSchema
 from btsapi import app, db
 import datetime
+from sqlalchemy import text
 
+# Define the blueprint: 'auth', set its url prefix: app.url/auth
 mod_vendors = Blueprint('vendors', __name__, url_prefix='/api/vendors')
 
 
@@ -30,10 +32,13 @@ def get_vendor(id):
 def update_vendor(id):
     """Update vendor details"""
     content = request.get_json()
-    vendor = Vendor.query.filter_by(pk=id).first()
+    vendor = Vendor.query.filter_by(pk=id)
 
     if "name" in content: vendor.name = content['name']
     if "notes" in content: vendor.notes = content['notes']
+    if "date_modified" in content: vendor.date_modified = datetime.datetime.utcnow
+    if "modified_by" in content: vendor.modified_by = content['modified_by']
+
     db.session.commit()
 
     return jsonify({})

@@ -13,7 +13,7 @@ setup(
         'flask-bcrypt',
         'flask-testing',
         'flask-cors',
-        'sqlalchemy-datatables'
+        'sqlalchemy-datatables',
     ],
     setup_requires=[
         'pytest-runner',

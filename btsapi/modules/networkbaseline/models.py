@@ -31,8 +31,8 @@ class NetworkBaselineView(db.Model):
 
     vendor = db.Column(db.String(50))
     technology = db.Column(db.String(50))
-    mo = db.Column(db.String(50), primary_key=True)
-    parameter = db.Column(db.String(50), primary_key=True)
+    mo = db.Column(db.String(200), primary_key=True)
+    parameter = db.Column(db.String(200), primary_key=True)
     value = db.Column(db.String(200))
     date_added = db.Column(db.String(50))
     date_modified = db.Column(db.String(50))

@@ -6,7 +6,6 @@ from btsapi import app, db
 import datetime
 from datatables import DataTables, ColumnDT
 
-
 mod_networkbaseline = Blueprint('networkbaseline', __name__, url_prefix='/api/networkbaseline')
 
 
@@ -14,20 +13,24 @@ mod_networkbaseline = Blueprint('networkbaseline', __name__, url_prefix='/api/ne
 def get_dt_data():
     """Get baseline values in datatables format"""
 
+    app.logger.info("NetworkBaselineView.vendor:{}".format(NetworkBaselineView.vendor))
+
     # Define columns
     columns = [
-        ColumnDT(NetworkBaselineView.vendor),
-        ColumnDT(NetworkBaselineView.technology),
-        ColumnDT(NetworkBaselineView.mo),
-        ColumnDT(NetworkBaselineView.parameter),
-        ColumnDT(NetworkBaselineView.value),
-        ColumnDT(NetworkBaselineView.date_added),
-        ColumnDT(NetworkBaselineView.date_modified),
+        ColumnDT(NetworkBaselineView.vendor,column_name="vendor", mData="vendor"),
+        ColumnDT(NetworkBaselineView.technology, column_name="technology", mData="technology"),
+        ColumnDT(NetworkBaselineView.mo, column_name="mo", mData="mo"),
+        ColumnDT(NetworkBaselineView.parameter, column_name="parameter", mData="parameter"),
+        ColumnDT(NetworkBaselineView.value, column_name="value", mData="value"),
+        ColumnDT(NetworkBaselineView.date_added, column_name="date_added", mData="date_added"),
+        ColumnDT(NetworkBaselineView.date_modified, column_name="date_modified", mData="date_modified")
     ]
 
-    query = NetworkBaselineView.query;
+    query = db.session.query(NetworkBaselineView.vendor, NetworkBaselineView.technology, NetworkBaselineView.mo,
+                              NetworkBaselineView.parameter, NetworkBaselineView.value, NetworkBaselineView.date_added,
+                              NetworkBaselineView.date_modified)
 
-    # GET parameters
+    # GET request parameters
     params = request.args.to_dict()
 
     row_table = DataTables(params, query, columns)
