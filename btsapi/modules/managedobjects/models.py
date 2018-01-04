@@ -22,6 +22,22 @@ class ManagedObject(db.Model):
 
 
 class ManagedObjectSchema(db.Model):
-    """Flask Marshmallow Schema for ManagedObject model"""
+    """Managed objects schemas table"""
+
+    __tablename__ = 'managedobjects_schemas'
+
+    pk = db.Column(db.Integer, db.Sequence('seq_managedobjects_schemas_pk', ), primary_key=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    notes = db.Column(db.Text)
+    tech_pk = db.Column(db.Integer, nullable=False)
+    vendor_pk = db.Column(db.Integer, nullable=False)
+    modified_by = db.Column(db.Integer)
+    added_by = db.Column(db.Integer)
+    date_added = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    date_modified = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+
+
+class ManagedObjectsMASchema(ma.ModelSchema):
+    """Flask Marshmallow Schema for Managed objects model"""
     class Meta:
         model = ManagedObject

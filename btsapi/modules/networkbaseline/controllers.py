@@ -34,11 +34,3 @@ def get_dt_data():
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
-
-
-@mod_networkbaseline.route('/tree/<int:parent_pk>', methods=['GET'])
-def get_aci_tree_data(parent_pk):
-    """Get baseline values"""
-
-    # @TODO: Add pagination
-    pass
