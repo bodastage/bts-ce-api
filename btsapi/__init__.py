@@ -67,6 +67,7 @@ from btsapi.modules.authentication.controllers import mod_auth as mod_auth
 from btsapi.modules.networkbaseline.controllers import mod_networkbaseline as mod_networkbaseline
 from btsapi.modules.technologies.controllers import mod_technologies as mod_technologies
 from btsapi.modules.managedobjects.controllers import mod_managedobjects as mod_managedobjects
+from btsapi.modules.networkmanagement.controllers import mod_netmgt as mod_netmgt
 
 # Register blueprint(s)
 app.register_blueprint(vendors_module)
@@ -75,3 +76,4 @@ app.register_blueprint(mod_auth)
 app.register_blueprint(mod_networkbaseline)
 app.register_blueprint(mod_technologies)
 app.register_blueprint(mod_managedobjects)
+app.register_blueprint(mod_netmgt)
