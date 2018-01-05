@@ -72,9 +72,6 @@ def get_aci_tree_data(parent_pk):
         # app.logger.info("Endi....")
         return jsonify(mo_aci_entries)
 
-
-
-
     if query is None:
         return jsonify([])
 

@@ -10,6 +10,9 @@ from flask_marshmallow import Marshmallow
 # Define the WSGI application object
 app = Flask(__name__)
 
+#Disable strict forward slashed requirement
+app.url_map.strict_slashes = False
+
 # Enable CORS -- Remove this if not useful
 CORS(app,  origins="*")
 
@@ -68,6 +71,7 @@ from btsapi.modules.networkbaseline.controllers import mod_networkbaseline as mo
 from btsapi.modules.technologies.controllers import mod_technologies as mod_technologies
 from btsapi.modules.managedobjects.controllers import mod_managedobjects as mod_managedobjects
 from btsapi.modules.networkmanagement.controllers import mod_netmgt as mod_netmgt
+from btsapi.modules.settings.controllers import mod_settings as mod_settings
 
 # Register blueprint(s)
 app.register_blueprint(vendors_module)
@@ -77,3 +81,4 @@ app.register_blueprint(mod_networkbaseline)
 app.register_blueprint(mod_technologies)
 app.register_blueprint(mod_managedobjects)
 app.register_blueprint(mod_netmgt)
+app.register_blueprint(mod_settings)
