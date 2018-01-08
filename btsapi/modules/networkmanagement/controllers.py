@@ -122,3 +122,47 @@ def get_site_dt_data():
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/cells/fields', methods=['GET'], strict_slashes=False)
+def get_network_cells_field_list():
+    """Get field list"""
+    fields = []
+
+    tech_pk = request.args.get("tech_pk","2") # Default is 3G
+
+    if tech_pk == "2":
+        metadata = MetaData()
+        cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+        fields = [c.name for c in cell_data_table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/cells/dt', methods=['GET'], strict_slashes=False)
+def get_cells_dt_data():
+    """Get sites in jQuery datatable data format"""
+
+    tech_pk = request.args.get("tech_pk", "2")  # Default is 3G
+
+    cell_data_table = None
+
+    metadata = MetaData()
+
+    if tech_pk == "2":
+        cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    columns = []
+    for c in cell_data_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(cell_data_table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
