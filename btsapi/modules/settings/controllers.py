@@ -36,6 +36,15 @@ def get_setting_value_by_id(id):
     return jsonify(setting_schema.dump(Setting.query.filter_by(pk=id).first()).data)
 
 
+@mod_settings.route('/category/<cat_id>', methods=['GET'], strict_slashes=False)
+def get_settings_by_category_id(cat_id):
+    """Get value for a setting"""
+
+    setting_schema = SettingMASchema()
+
+    return jsonify(setting_schema.dump(Setting.query.filter_by(category_id=cat_id).all(), many=True).data)
+
+
 @mod_settings.route('/<int:id>',methods=['POST'], strict_slashes=False)
 def update_setting(id):
     """Update setting

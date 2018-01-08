@@ -6,7 +6,7 @@ from btsapi import app, db
 import datetime
 from datatables import DataTables, ColumnDT
 from sqlalchemy import  text, Table, MetaData
-
+import json
 mod_managedobjects = Blueprint('managedobjects', __name__, url_prefix='/api/managedobjects')
 
 
@@ -82,6 +82,29 @@ def get_aci_tree_data(parent_pk):
     return jsonify(mo_aci_entries)
 
 
+@mod_managedobjects.route('/tree/cached', methods=['GET'])
+def get_cached_mo_tree():
+    """Get aci tree data from precomputed tree from the db"""
+    vendor_pk = request.args.get("vendor_pk", None)
+    tech_pk = request.args.get('tech_pk', None)
+
+    metadata = MetaData()
+    cache_table = Table('cache', metadata, autoload=True, autoload_with=db.engine, schema='public')
+
+    # vendor = Ericsson, technology = UMTS or LTE
+    if int(vendor_pk) == 1 and int(tech_pk) == 2:
+        response = app.response_class(
+            response=db.session.query(cache_table).filter_by(name="mo_aci_tree").first().data,
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+
+    return jsonify([])
+
+
+
+
 @mod_managedobjects.route('/fields/<int:mo_pk>/', methods=['GET'])
 def get_fields_in_mo_table(mo_pk):
     """Get the column files in the managed objects cm data table"""
@@ -100,7 +123,7 @@ def get_fields_in_mo_table(mo_pk):
     mo_table_name = "{0}.{1}".format(schema_name,mo_name)
 
     metadata = MetaData()
-    mo_data_table =  Table(mo_name.lower(), metadata, autoload=True,autoload_with=db.engine, schema=schema_name)
+    mo_data_table = Table(mo_name.lower(), metadata, autoload=True,autoload_with=db.engine, schema=schema_name)
 
     fields = [c.name for c in mo_data_table.columns]
 
@@ -129,8 +152,6 @@ def get_dt_data(mo_pk):
         columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
 
     query = db.session.query(mo_data_table)
-
-    app.logger.info(str(query))
 
     # GET request parameters
     params = request.args.to_dict()

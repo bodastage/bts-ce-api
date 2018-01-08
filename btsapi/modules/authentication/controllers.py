@@ -25,7 +25,6 @@ def authenticate_user():
 
         del user_data['pk']
 
-        app.logger.info(user_data)
         return jsonify(user_data)
     else:
         return jsonify({"message":"Invalid credentials"}),404

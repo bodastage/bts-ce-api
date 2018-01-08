@@ -46,7 +46,7 @@ def handle_options_header():
         headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
         headers['Access-Control-Allow-Headers'] = request.headers.get(
             'Access-Control-Request-Headers', 'Authorization')
-        return ('', 200, headers)
+        return '', 200, headers
 
 
 # TP error handling

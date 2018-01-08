@@ -5,6 +5,8 @@ from btsapi.modules.networkmanagement.models import LiveCell3G, LiveCell3GMASche
 from btsapi import app, db
 import datetime
 import math
+from sqlalchemy import Table, MetaData
+from datatables import DataTables, ColumnDT
 
 mod_netmgt = Blueprint('networkmanagement', __name__, url_prefix='/api/network')
 
@@ -17,7 +19,6 @@ def get_live_network_cells():
 
     # includes direction i.e column:asc or column:desc , default is natual order
     order_by = request.args.get('order_by', None)
-
 
     total = LiveCell3G.query.count()
 
@@ -41,3 +42,83 @@ def get_live_network_cells():
         "total": total,
         "pages": pages
     })
+
+
+@mod_netmgt.route('/tree/cached', methods=['GET'], strict_slashes=False)
+def get_network_tree():
+    """Get network pre computed live network tree"""
+    source = request.args.get('source', "live") # live or plan
+
+    # @TODO: Create model definitions
+    metadata = MetaData()
+    cache_table = Table('cache', metadata, autoload=True, autoload_with=db.engine, schema='public')
+
+    response = app.response_class(
+        response=db.session.query(cache_table).filter_by(name="live_network_aci_tree").first().data,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
+
+
+@mod_netmgt.route('/relations/dt', methods=['GET'], strict_slashes=False)
+def get_relations_dt_data():
+    """Get relations in jQuery datatable data format"""
+
+    metadata = MetaData()
+    relations_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    for c in relations_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(relations_table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/nodes/dt', methods=['GET'], strict_slashes=False)
+def get_nodes_dt_data():
+    """Get nodes in jQuery datatable data format"""
+
+    metadata = MetaData()
+    nodes_table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    for c in nodes_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(nodes_table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/sites/dt', methods=['GET'], strict_slashes=False)
+def get_site_dt_data():
+    """Get sites in jQuery datatable data format"""
+
+    metadata = MetaData()
+    sites_table = Table('vw_sites', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    for c in sites_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(sites_table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
