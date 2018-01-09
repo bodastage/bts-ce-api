@@ -5,11 +5,13 @@ from btsapi.modules.networkbaseline.models import NetworkBaseline, NetworkBaseli
 from btsapi.extensions import db
 import datetime
 from datatables import DataTables, ColumnDT
+from flask_login import login_required
 
 mod_networkbaseline = Blueprint('networkbaseline', __name__, url_prefix='/api/networkbaseline')
 
 
 @mod_networkbaseline.route('/dt/', methods=['GET'])
+@login_required
 def get_dt_data():
     """Get baseline values in jQuery datatables format"""
 

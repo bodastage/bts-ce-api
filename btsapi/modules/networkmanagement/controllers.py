@@ -7,11 +7,14 @@ import datetime
 import math
 from sqlalchemy import Table, MetaData
 from datatables import DataTables, ColumnDT
+from btsapi import app
+from flask_login import login_required
 
 mod_netmgt = Blueprint('networkmanagement', __name__, url_prefix='/api/network')
 
 
 @mod_netmgt.route('/live/cells/3g', methods=['GET'], strict_slashes=False)
+@login_required
 def get_live_network_cells():
     page = request.args.get('page', 0)
     size = request.args.get('size', 10)
@@ -45,6 +48,7 @@ def get_live_network_cells():
 
 
 @mod_netmgt.route('/tree/cached', methods=['GET'], strict_slashes=False)
+@login_required
 def get_network_tree():
     """Get network pre computed live network tree"""
     source = request.args.get('source', "live") # live or plan
@@ -62,6 +66,7 @@ def get_network_tree():
 
 
 @mod_netmgt.route('/relations/dt', methods=['GET'], strict_slashes=False)
+@login_required
 def get_relations_dt_data():
     """Get relations in jQuery datatable data format"""
 
@@ -83,6 +88,7 @@ def get_relations_dt_data():
 
 
 @mod_netmgt.route('/nodes/dt', methods=['GET'], strict_slashes=False)
+@login_required
 def get_nodes_dt_data():
     """Get nodes in jQuery datatable data format"""
 
@@ -104,6 +110,7 @@ def get_nodes_dt_data():
 
 
 @mod_netmgt.route('/sites/dt', methods=['GET'], strict_slashes=False)
+@login_required
 def get_site_dt_data():
     """Get sites in jQuery datatable data format"""
 
@@ -125,6 +132,7 @@ def get_site_dt_data():
 
 
 @mod_netmgt.route('/live/cells/fields', methods=['GET'], strict_slashes=False)
+@login_required
 def get_network_cells_field_list():
     """Get field list"""
     fields = []
@@ -141,6 +149,7 @@ def get_network_cells_field_list():
 
 
 @mod_netmgt.route('/live/cells/dt', methods=['GET'], strict_slashes=False)
+@login_required
 def get_cells_dt_data():
     """Get sites in jQuery datatable data format"""
 

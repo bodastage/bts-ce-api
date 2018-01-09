@@ -5,12 +5,14 @@ from btsapi.modules.vendors.models import Vendor, VendorSchema
 from btsapi.extensions import db
 import datetime
 from sqlalchemy import text
+from flask_login import login_required
 
 # Define the blueprint: 'auth', set its url prefix: app.url/auth
 mod_vendors = Blueprint('vendors', __name__, url_prefix='/api/vendors')
 
 
 @mod_vendors.route('/', methods=['GET'])
+@login_required
 def get_vendors():
     """Get a list of all the vendors in the system"""
 
@@ -20,6 +22,7 @@ def get_vendors():
 
 
 @mod_vendors.route('/<int:id>', methods=['GET'])
+@login_required
 def get_vendor(id):
     """Get vendor details"""
 
@@ -29,6 +32,7 @@ def get_vendor(id):
 
 
 @mod_vendors.route('/<int:id>', methods=['PUT'])
+@login_required
 def update_vendor(id):
     """Update vendor details"""
     content = request.get_json()
@@ -45,6 +49,7 @@ def update_vendor(id):
 
 
 @mod_vendors.route('/<int:id>', methods=['DELETE'])
+@login_required
 def delete_vendor(id):
     """Delete vendor"""
     Vendor.query.filter_by(pk=id).delete()
@@ -55,6 +60,7 @@ def delete_vendor(id):
 
 
 @mod_vendors.route('/', methods=['POST'])
+@login_required
 def add_vendor():
     """Add a vendor"""
     content = request.get_json()

@@ -36,6 +36,18 @@ class User(db.Model):
         self.is_account_non_locked = is_account_non_locked
         self.is_enabled = is_enabled
 
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.email)
+
 class UserSchema(ma.ModelSchema):
     """Flask Marshmallow Schema for Vendor model"""
 

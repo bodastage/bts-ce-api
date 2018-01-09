@@ -5,11 +5,13 @@ from btsapi.modules.settings.models import Setting, SettingMASchema
 from btsapi.extensions import  db
 import datetime
 import math
+from flask_login import login_required
 
 mod_settings = Blueprint('settings', __name__, url_prefix='/api/settings')
 
 
 @mod_settings.route('/', methods=['GET'], strict_slashes=False)
+@login_required
 def get_all_settings():
     """Get all settings"""
 
@@ -19,6 +21,7 @@ def get_all_settings():
 
 
 @mod_settings.route('/<string:name>', methods=['GET'], strict_slashes=False)
+@login_required
 def get_setting_value_by_name(name):
     """Get value for a setting"""
 
@@ -28,6 +31,7 @@ def get_setting_value_by_name(name):
 
 
 @mod_settings.route('/<int:id>', methods=['GET'], strict_slashes=False)
+@login_required
 def get_setting_value_by_id(id):
     """Get value for a setting"""
 
@@ -37,6 +41,7 @@ def get_setting_value_by_id(id):
 
 
 @mod_settings.route('/category/<cat_id>', methods=['GET'], strict_slashes=False)
+@login_required
 def get_settings_by_category_id(cat_id):
     """Get value for a setting"""
 
@@ -46,6 +51,7 @@ def get_settings_by_category_id(cat_id):
 
 
 @mod_settings.route('/<int:id>',methods=['POST'], strict_slashes=False)
+@login_required
 def update_setting(id):
     """Update setting
 

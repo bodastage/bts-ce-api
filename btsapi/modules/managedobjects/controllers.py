@@ -7,10 +7,14 @@ import datetime
 from datatables import DataTables, ColumnDT
 from sqlalchemy import  text, Table, MetaData
 import json
+from btsapi import app
+from flask_login import login_required
+
 mod_managedobjects = Blueprint('managedobjects', __name__, url_prefix='/api/managedobjects')
 
 
 @mod_managedobjects.route('/tree/<int:parent_pk>/', methods=['GET'])
+@login_required
 def get_aci_tree_data(parent_pk):
     """Get aci tree data for managed objects"""
     vendor_pk = request.args.get('vendor_pk', None)
@@ -83,6 +87,7 @@ def get_aci_tree_data(parent_pk):
 
 
 @mod_managedobjects.route('/tree/cached', methods=['GET'])
+@login_required
 def get_cached_mo_tree():
     """Get aci tree data from precomputed tree from the db"""
     vendor_pk = request.args.get("vendor_pk", None)
@@ -103,9 +108,8 @@ def get_cached_mo_tree():
     return jsonify([])
 
 
-
-
 @mod_managedobjects.route('/fields/<int:mo_pk>/', methods=['GET'])
+@login_required
 def get_fields_in_mo_table(mo_pk):
     """Get the column files in the managed objects cm data table"""
 
@@ -131,6 +135,7 @@ def get_fields_in_mo_table(mo_pk):
 
 
 @mod_managedobjects.route('/dt/<int:mo_pk>/', methods=['GET'])
+@login_required
 def get_dt_data(mo_pk):
     """Get managed objects values in jQuery datatables format"""
 

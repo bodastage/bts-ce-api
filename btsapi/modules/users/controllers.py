@@ -4,11 +4,13 @@ from flask import Blueprint, request, render_template, \
 from btsapi.modules.users.models import User, UserSchema
 from btsapi.extensions import db
 import datetime
+from flask_login import login_required
 
 mod_users = Blueprint('users', __name__, url_prefix='/api/users')
 
 
 @mod_users.route('/', methods=['GET'])
+@login_required
 def get_users():
     """Get a list of all the users in the system"""
 
@@ -18,6 +20,7 @@ def get_users():
 
 
 @mod_users.route('/<int:id>', methods=['GET'])
+@login_required
 def get_user(id):
     """Get vendor details"""
 
@@ -27,6 +30,7 @@ def get_user(id):
 
 
 @mod_users.route('/<int:id>', methods=['PUT'])
+@login_required
 def update_user(id):
     """Update user details"""
     content = request.get_json()
@@ -47,6 +51,7 @@ def update_user(id):
 
 
 @mod_users.route('/<int:id>', methods=['DELETE'])
+@login_required
 def delete_user(id):
     """Delete user"""
     User.query.filter_by(pk=id).delete()
@@ -57,6 +62,7 @@ def delete_user(id):
 
 
 @mod_users.route('/', methods=['POST'])
+@login_required
 def add_user():
     """Add a user"""
     content = request.get_json()

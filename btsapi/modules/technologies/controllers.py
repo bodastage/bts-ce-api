@@ -5,11 +5,13 @@ from btsapi.modules.technologies.models import Technology, TechnologySchema
 from btsapi.extensions import db
 import datetime
 from sqlalchemy import text
+from flask_login import login_required
 
 mod_technologies = Blueprint('technologies', __name__, url_prefix='/api/technologies')
 
 
 @mod_technologies.route('/', methods=['GET'])
+@login_required
 def get_technologies():
     """Get a list of all the technologies in the system"""
 
@@ -19,6 +21,7 @@ def get_technologies():
 
 
 @mod_technologies.route('/<int:id>', methods=['GET'])
+@login_required
 def get_technology(id):
     """Get technology details"""
 
@@ -28,6 +31,7 @@ def get_technology(id):
 
 
 @mod_technologies.route('/<int:id>', methods=['PUT'])
+@login_required
 def update_technology(id):
     """Update vendor details"""
     content = request.get_json()
@@ -44,6 +48,7 @@ def update_technology(id):
 
 
 @mod_technologies.route('/<int:id>', methods=['DELETE'])
+@login_required
 def delete_technology(id):
     """Delete technology"""
     Technology.query.filter_by(pk=id).delete()
@@ -54,6 +59,7 @@ def delete_technology(id):
 
 
 @mod_technologies.route('/', methods=['POST'])
+@login_required
 def add_technology():
     """Add a technology"""
     content = request.get_json()
