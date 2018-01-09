@@ -11,6 +11,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 SQLALCHEMY_DATABASE_URI = 'postgresql://bodastage:password@192.168.99.100/bts'
 DATABASE_CONNECT_OPTIONS = {}
 
+# Disable migration creation
 SQLALCHEMY_TRACK_MODIFICATIONS=False
 
 # Application threads. A common general assumption is
@@ -20,7 +21,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS=False
 THREADS_PER_PAGE = 2
 
 # Enable protection agains *Cross-site Request Forgery (CSRF)*
-CSRF_ENABLED     = True
+CSRF_ENABLED = True
 
 # Use a secure, unique and absolutely secret key for
 # signing the data. 

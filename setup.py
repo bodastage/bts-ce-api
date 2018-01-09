@@ -14,6 +14,8 @@ setup(
         'flask-testing',
         'flask-cors',
         'sqlalchemy-datatables',
+        'flask-login',
+        'blinker'
     ],
     setup_requires=[
         'pytest-runner',

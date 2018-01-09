@@ -1,8 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
-from btsapi import db, ma
+from btsapi.extensions import db, ma
 import datetime
 from sqlalchemy import Table, MetaData, inspect
-from sqlalchemy.orm import class_mapper, mapper
 
 
 metadata = MetaData()

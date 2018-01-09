@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from btsapi import db, ma
+from btsapi.extensions import  db, ma
 import datetime
 from sqlalchemy import Table, MetaData
 import marshmallow

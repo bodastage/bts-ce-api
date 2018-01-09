@@ -1,84 +1,71 @@
 # Import flask and template operators
 from flask import Flask, render_template, request
+from flask.sessions import SecureCookieSessionInterface
+
+from btsapi.extensions import db, ma, login_manager
+
 from flask_cors import CORS
-# Import SQLAlchemy
-from flask_sqlalchemy import SQLAlchemy
 
-# Import Flask Marshmallow
-from flask_marshmallow import Marshmallow
+import base64
 
-# Define the WSGI application object
-app = Flask(__name__)
+# Authentication and authorization functionality from flask_login
+from flask_login import user_loaded_from_header, user_loaded_from_request, LoginManager
+from flask import g
 
-#Disable strict forward slashed requirement
-app.url_map.strict_slashes = False
-
-# Enable CORS -- Remove this if not useful
-CORS(app,  origins="*")
+from btsapi.modules.users.models import User
 
 
-# This is added to handle CORS
-# Taken from https://mortoray.com/2014/04/09/allowing-unlimited-access-with-cors/
-@app.after_request
-def add_cors(resp):
-    """ Ensure all responses have the CORS headers. This ensures any failures are also accessible
-        by the client. """
 
-    resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin','*')
-    resp.headers['Access-Control-Allow-Credentials'] = 'true'
-    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
-    resp.headers['Access-Control-Allow-Headers'] = request.headers.get(
-        'Access-Control-Request-Headers', 'Authorization' )
-    # set low for debugging
-    # if app.debug:
-    #    resp.headers['Access-Control-Max-Age'] = '1'
-
-    return resp
+# This prevents setting the Flask Session cookie whenever the user authenticated using your header_loader.
+# Reference: https://flask-login.readthedocs.io/en/latest/
+class CustomSessionInterface(SecureCookieSessionInterface):
+    """Prevent creating session from API requests."""
+    def save_session(self, *args, **kwargs):
+        if g.get('login_via_header'):
+            return
+        return super(CustomSessionInterface, self).save_session(*args,
+                                                                **kwargs)
 
 
-# Intercept pre-flight requests
-@app.before_request
-def handle_options_header():
-    if request.method == 'OPTIONS':
-        headers = {}
-        headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
-        headers['Access-Control-Allow-Credentials'] = 'true'
-        headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
-        headers['Access-Control-Allow-Headers'] = request.headers.get(
-            'Access-Control-Request-Headers', 'Authorization')
-        return '', 200, headers
+def create_app():
+    # Define the WSGI application object
+    app = Flask(__name__)
+
+    # Disable strict forward slashed requirement
+    app.url_map.strict_slashes = False
+
+    # Configurations
+    app.config.from_object('btsapi.config')
+
+    # Define the database object which is imported
+    # by modules and controllers
+    db.init_app(app) #flask_sqlalchemy
+    ma.init_app(app) #flask_marshmallow
+
+    print ("Were are here")
+
+    # Enable CORS -- Remove this if not useful
+    CORS(app,  origins="*")
+
+    login_manager.init_app(app)
+
+    # Disable sessions for API calls
+    app.session_interface = CustomSessionInterface()
+
+    return app
 
 
-# TP error handling
-@app.errorhandler(404)
-def not_found(error):
-    return render_template('404.html'), 404
+@user_loaded_from_header.connect
+def user_loaded_from_header(self, user=None):
+    g.login_via_header = True
 
 
-# Configurations
-app.config.from_object('btsapi.config')
+@login_manager.header_loader
+def load_user_from_header(header_val):
+    header_val = header_val.replace('Basic ', '', 1)
+    try:
+        header_val = base64.b64decode(header_val)
+    except TypeError:
+        pass
+    return User.query.filter_by(api_key=header_val).first()
 
-# Define the database object which is imported
-# by modules and controllers
-db = SQLAlchemy(app)
-ma = Marshmallow(app)
-
-# Import modules using the blueprint handlers variable (mod_vendors)
-from btsapi.modules.vendors.controllers import mod_vendors as vendors_module
-from btsapi.modules.users.controllers import mod_users as mod_users
-from btsapi.modules.authentication.controllers import mod_auth as mod_auth
-from btsapi.modules.networkbaseline.controllers import mod_networkbaseline as mod_networkbaseline
-from btsapi.modules.technologies.controllers import mod_technologies as mod_technologies
-from btsapi.modules.managedobjects.controllers import mod_managedobjects as mod_managedobjects
-from btsapi.modules.networkmanagement.controllers import mod_netmgt as mod_netmgt
-from btsapi.modules.settings.controllers import mod_settings as mod_settings
-
-# Register blueprint(s)
-app.register_blueprint(vendors_module)
-app.register_blueprint(mod_users)
-app.register_blueprint(mod_auth)
-app.register_blueprint(mod_networkbaseline)
-app.register_blueprint(mod_technologies)
-app.register_blueprint(mod_managedobjects)
-app.register_blueprint(mod_netmgt)
-app.register_blueprint(mod_settings)

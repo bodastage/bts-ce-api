@@ -2,7 +2,7 @@ from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
                   jsonify, make_response
 from btsapi.modules.vendors.models import Vendor, VendorSchema
-from btsapi import app, db
+from btsapi.extensions import db
 import datetime
 from sqlalchemy import text
 

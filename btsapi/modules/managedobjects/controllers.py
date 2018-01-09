@@ -2,7 +2,7 @@ from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
                   jsonify, make_response
 from btsapi.modules.managedobjects.models import ManagedObject, ManagedObjectSchema, ManagedObjectsMASchema
-from btsapi import app, db
+from btsapi.extensions import db
 import datetime
 from datatables import DataTables, ColumnDT
 from sqlalchemy import  text, Table, MetaData

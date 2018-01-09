@@ -2,7 +2,7 @@ from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
                   jsonify, make_response
 from btsapi.modules.networkmanagement.models import LiveCell3G, LiveCell3GMASchema
-from btsapi import app, db
+from btsapi.extensions import  db
 import datetime
 import math
 from sqlalchemy import Table, MetaData
