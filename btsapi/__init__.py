@@ -87,7 +87,7 @@ def add_cors(resp):
 
     resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin','*')
     resp.headers['Access-Control-Allow-Credentials'] = 'true'
-    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
+    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET, PUT, DELETE'
     resp.headers['Access-Control-Allow-Headers'] = request.headers.get(
         'Access-Control-Request-Headers', 'Authorization' )
     # set low for debugging
@@ -104,7 +104,7 @@ def handle_options_header():
         headers = {}
         headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
         headers['Access-Control-Allow-Credentials'] = 'true'
-        headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
+        headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET, PUT, DELETE'
         headers['Access-Control-Allow-Headers'] = request.headers.get(
             'Access-Control-Request-Headers', 'Authorization')
         return '', 200, headers
