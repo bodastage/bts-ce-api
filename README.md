@@ -1,4 +1,5 @@
-# Boda Telecom Suite  API Server
+## Boda Telecom Suite  Rest API
+Rest API for Boda Telecom Suite Communtiy Edition (BTS-CE)
 
 ## Built With
 - [Flask](http://flask.pocoo.org/)
