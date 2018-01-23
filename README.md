@@ -1,23 +1,20 @@
-Boda Telecom Suite  API Server
+# Boda Telecom Suite  API Server
+
+## Built With
+- [Flask](http://flask.pocoo.org/)
+- [SQLAlchemy](https://www.sqlalchemy.org/)
+- [PostgreSQL](https://www.postgresql.org/)
+
+## Resources
+
+* [Communtiy Forum at TelecomHall.net](http://telecomHall.net)
+* [Online Documentation](http://bts.bodastage.org)
+
+## Copyright / License
+Copyright 2017 - 2018 [Bodastage Solutions](http://www.bodastage.com)
+
+Licensed under the Apache License, Version 2.0 ; you may not use this work except in compliance with the License. You may obtain a copy of the License in the LICENSE file, or at:
+
+https://www.apache.org/licenses/LICENSE-2.0
 
 
-Folder structure
---------------------------------
-btsapi
-    |-- run.py
-    |-- config.py
-	|-- tests 			 	# Tests
-    |__ /env             	# Virtual Environment
-    |__ /btsapi             # Our Application Module
-         |-- __init__.py
-         |-- /modules   
-			   |-- __init__.py
-		       |--networkaudit
-					 |-- __init__.py
-					 |-- controllers.py
-         |__ /templates
-             |-- 404.html
-             |__ /module
-                 |-- template.html
-         |__ /static
-			 |--style.css
