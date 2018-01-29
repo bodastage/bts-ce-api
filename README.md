@@ -1,7 +1,8 @@
-## Boda Telecom Suite  Rest API
-Rest API for Boda Telecom Suite Communtiy Edition (BTS-CE)
+## Boda Telecom Suite  REST API
+REST API for Boda Telecom Suite Communtiy Edition (BTS-CE)
 
 ## Built With
+- [Python](https://www.python.org)
 - [Flask](http://flask.pocoo.org/)
 - [SQLAlchemy](https://www.sqlalchemy.org/)
 - [PostgreSQL](https://www.postgresql.org/)
