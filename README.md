@@ -1,4 +1,5 @@
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodastage/bts-ce-api-server.svg)]() [![Docker Automated build](https://img.shields.io/docker/automated/bodastage/bts-ce-api-server.svg)]() [![license](https://img.shields.io/github/license/bodastage/bts-ce-api.svg)]()
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodastage/bts-ce-api-server.svg)]() [![Docker Automated build](https://img.shields.io/docker/automated/bodastage/bts-ce-api-server.svg)]() 
+[![license](https://img.shields.io/github/license/bodastage/bts-ce-api.svg)]()
 
 ## Boda Telecom Suite  REST API
 REST API for Boda Telecom Suite Communtiy Edition (BTS-CE). BTS-CE is an open source telecommunication network management platform.
