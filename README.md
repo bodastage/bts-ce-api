@@ -1,5 +1,5 @@
 ## Boda Telecom Suite  REST API
-REST API for Boda Telecom Suite Communtiy Edition (BTS-CE)
+REST API for Boda Telecom Suite Communtiy Edition (BTS-CE). BTS-CE is an open source telecommunication network management platform.
 
 ## Built With
 - [Python](https://www.python.org)
