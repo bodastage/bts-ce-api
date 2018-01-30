@@ -7,7 +7,7 @@ flask-jsontools
 flask-marshmallow==0.8.0
 marshmallow-sqlalchemy==0.13.2
 flask-bcrypt==0.7.1
-flask-testing==0.71
+flask-testing==0.7.1
 flask-cors==3.0.3
 sqlalchemy-datatables
 flask-login==0.4.1
