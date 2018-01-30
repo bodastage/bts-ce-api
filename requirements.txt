@@ -1,7 +1,7 @@
 flask==0.12.2
 psycopg2==2.7.3.2
 marshmallow==2.15.0
-sqlalchemy=-1.2.0
+sqlalchemy==1.2.0
 flask-sqlalchemy==2.3.2
 flask-jsontools
 flask-marshmallow==0.8.0
