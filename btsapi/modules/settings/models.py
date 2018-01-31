@@ -33,4 +33,4 @@ class SettingMASchema(ma.ModelSchema):
 
     class Meta:
         model = Setting
-        fields = ('id','name', 'label', 'value', 'category')
+        fields = ('id','name', 'label', 'value', 'category_id')
