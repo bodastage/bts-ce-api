@@ -6,6 +6,8 @@ from btsapi.extensions import  db
 import datetime
 import math
 from flask_login import login_required
+from sqlalchemy import update
+from btsapi import app
 
 mod_settings = Blueprint('settings', __name__, url_prefix='/api/settings')
 
@@ -54,20 +56,22 @@ def get_settings_by_category_id(cat_id):
 @login_required
 def update_setting(id):
     """Update setting
-
+       value @param String|Integer|date Setting value
+       name=setting name
        data_type = string|integer|timestamp|float
     """
     content = request.get_json()
 
     name = content['name']
     value= content['value']
-    data_type = content['date_type']
+    data_type = content['data_type']
 
-    setting = Setting.query.filter_by(pk=id)
+    setting = Setting.query.filter_by(pk=id).first()
 
     if "name" in content: setting.name = content['name']
     if "value" in content:
         if data_type == 'string': setting.string_value = content['value']
+        if data_type == 'text': setting.text_value = content['value']
         if data_type == 'integer': setting.integer_value = int(content['value'])
         if data_type == 'float': setting.float_value = float(content['value'])
         if data_type == 'timestamp': setting.timestamp_value = datetime(content['value'])
