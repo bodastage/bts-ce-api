@@ -6,6 +6,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'flask',
+		'sqlalchemy',
+		'marshmallow',
         'flask-sqlalchemy',
         'flask-jsontools',
         'flask-marshmallow',
