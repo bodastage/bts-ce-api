@@ -3,6 +3,7 @@ from btsapi.common.model_helpers import dump_datetime;
 from btsapi import db, ma;
 import datetime
 
+
 class Vendor(db.Model):
     """Vendors model"""
 
