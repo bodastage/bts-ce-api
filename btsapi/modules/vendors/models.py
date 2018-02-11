@@ -3,6 +3,7 @@ from btsapi.common.model_helpers import dump_datetime;
 from btsapi import db, ma;
 import datetime
 
+
 class Vendor(db.Model):
     """Vendors model"""
 
@@ -10,6 +11,7 @@ class Vendor(db.Model):
 
     pk = db.Column(db.Integer,  db.Sequence('seq_vendors_pk',), primary_key=True, nullable=False )
     name = db.Column(db.String(255), unique=True, nullable=False)
+    supported = db.Column(db.Boolean)
     notes = db.Column(db.Text)
     modified_by = db.Column(db.Integer)
     added_by = db.Column(db.Integer)

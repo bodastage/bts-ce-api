@@ -6,8 +6,9 @@ from btsapi.extensions import  db
 import datetime
 import math
 from flask_login import login_required
-from sqlalchemy import update
+from sqlalchemy import update,  Table, MetaData
 from btsapi import app
+from datatables import DataTables, ColumnDT
 
 mod_settings = Blueprint('settings', __name__, url_prefix='/api/settings')
 
@@ -79,3 +80,25 @@ def update_setting(id):
     db.session.commit()
 
     return jsonify({})
+
+@mod_settings.route('/cm/vendor_format_map/dt',methods=['GET'], strict_slashes=False)
+@login_required
+def get_supported_vendor_cm_file_format():
+    """
+    Get support file format for each vendor and technology
+    """
+    metadata = MetaData()
+    table = Table('vw_vendor_cm_file_formats', metadata, autoload=True, autoload_with=db.engine)
+
+    columns = []
+    for c in table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
