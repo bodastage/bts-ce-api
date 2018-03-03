@@ -102,3 +102,28 @@ def get_supported_vendor_cm_file_format():
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
+
+
+@mod_settings.route('/network/technologies/dt', methods=['GET'], strict_slashes=False)
+def get_supported_technologies():
+    """
+        Get supported technologies and vendors in the network
+    """
+
+    app.logger.debug("Logging get_supported_technologies")
+
+    metadata = MetaData()
+    supported_vendor_tech = Table('vw_supported_vendor_tech', metadata, autoload=True, autoload_with=db.engine, schema='public')
+
+    columns = []
+    for c in supported_vendor_tech.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(supported_vendor_tech)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
