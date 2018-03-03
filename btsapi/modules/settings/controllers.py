@@ -1,7 +1,7 @@
 from flask import Blueprint, request, render_template, \
     flash, g, session, redirect, url_for, \
     jsonify, make_response
-from btsapi.modules.settings.models import Setting, SettingMASchema
+from btsapi.modules.settings.models import Setting, SettingMASchema, SupportedVendorTech
 from btsapi.extensions import  db
 import datetime
 import math
@@ -81,6 +81,7 @@ def update_setting(id):
 
     return jsonify({})
 
+
 @mod_settings.route('/cm/vendor_format_map/dt',methods=['GET'], strict_slashes=False)
 @login_required
 def get_supported_vendor_cm_file_format():
@@ -105,12 +106,10 @@ def get_supported_vendor_cm_file_format():
 
 
 @mod_settings.route('/network/technologies/dt', methods=['GET'], strict_slashes=False)
-def get_supported_technologies():
+def get_supported_vendor_technologies():
     """
         Get supported technologies and vendors in the network
     """
-
-    app.logger.debug("Logging get_supported_technologies")
 
     metadata = MetaData()
     supported_vendor_tech = Table('vw_supported_vendor_tech', metadata, autoload=True, autoload_with=db.engine, schema='public')
@@ -127,3 +126,45 @@ def get_supported_technologies():
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
+
+
+
+@mod_settings.route('/network/technologies', methods=['POST'], strict_slashes=False)
+def add_supported_vendor_technologies():
+    """
+    Add supoorted vendor technlogies
+
+    :return:
+    """
+    content = request.get_json()
+
+    vendor_pk = content['vendor_pk']
+    tech_pk = content['tech_pk']
+
+    # Does the vendor to tech mapping exist?
+    supported_vender_tech = SupportedVendorTech.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
+
+    if supported_vender_tech != None:
+        return jsonify({"message":"Mapping already exists", "status":"error", "code": 409 })
+
+    vendor_tech = SupportedVendorTech(vendor_pk=vendor_pk, tech_pk=tech_pk)
+
+    db.session.add(vendor_tech)
+    db.session.commit()
+
+    return jsonify({"status": "success"})
+
+@mod_settings.route('/network/technologies/<int:id>', methods=['DELETE'], strict_slashes=False)
+def delete_supported_vendor_technologies(id):
+    """
+    Delete vendor technology map
+    :param id: Vendor technology map od
+
+    :return:
+    """
+
+    SupportedVendorTech.query.filter_by(pk=id).delete()
+
+    db.session.commit()
+
+    return jsonify({"status": "success"})

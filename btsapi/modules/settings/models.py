@@ -4,7 +4,6 @@ import datetime
 from sqlalchemy import Table, MetaData
 import marshmallow
 
-
 metadata = MetaData()
 
 #
@@ -51,3 +50,24 @@ class SettingMASchema(ma.ModelSchema):
     class Meta:
         model = Setting
         fields = ('id','name', 'label', 'value', 'category_id')
+
+class SupportedVendorTech(db.Model):
+    """
+    Supported vendor technologies model
+    """
+    __tablename__ = 'supported_vendor_tech'
+
+    pk = db.Column(db.Integer, db.Sequence('seq_supported_vendor_tech_pk', ), primary_key=True, nullable=False)
+    vendor_pk = db.Column(db.Integer, nullable=False)
+    tech_pk = db.Column(db.Integer, nullable=False)
+    modified_by = db.Column(db.Integer)
+    added_by = db.Column(db.Integer)
+    date_added = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    date_modified = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+
+    __table_args__ = (db.UniqueConstraint('vendor_pk', 'tech_pk', name='unq_supported_vendor_tech'),
+                      )
+
+    def init(self, vendor_pk, tech_pk):
+        self.tech_pk = tech_pk
+        self.vendor_pk = vendor_pk
