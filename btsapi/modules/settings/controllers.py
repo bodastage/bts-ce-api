@@ -1,7 +1,7 @@
 from flask import Blueprint, request, render_template, \
     flash, g, session, redirect, url_for, \
     jsonify, make_response
-from btsapi.modules.settings.models import Setting, SettingMASchema, SupportedVendorTech
+from btsapi.modules.settings.models import Setting, SettingMASchema, SupportedVendorTech, CMFileFormats, CMFileFormatsMASchema
 from btsapi.extensions import  db
 import datetime
 import math
@@ -9,6 +9,7 @@ from flask_login import login_required
 from sqlalchemy import update,  Table, MetaData
 from btsapi import app
 from datatables import DataTables, ColumnDT
+import json
 
 mod_settings = Blueprint('settings', __name__, url_prefix='/api/settings')
 
@@ -20,7 +21,7 @@ def get_all_settings():
 
     setting_schema = SettingMASchema()
 
-    return jsonify( [setting_schema.dump(v).data for v in Setting.query.all()] )
+    return jsonify( setting_schema.dump(v).data for v in Setting.query.all())
 
 
 @mod_settings.route('/<string:name>', methods=['GET'], strict_slashes=False)
@@ -84,7 +85,7 @@ def update_setting(id):
 
 @mod_settings.route('/cm/vendor_format_map/dt',methods=['GET'], strict_slashes=False)
 @login_required
-def get_supported_vendor_cm_file_format():
+def get_supported_vendor_cm_file_format_for_datatable():
     """
     Get support file format for each vendor and technology
     """
@@ -105,8 +106,38 @@ def get_supported_vendor_cm_file_format():
     return jsonify(row_table.output_result())
 
 
-@mod_settings.route('/network/technologies/dt', methods=['GET'], strict_slashes=False)
+@mod_settings.route('/cm/vendor_format_map',methods=['GET'], strict_slashes=False)
+@login_required
+def get_supported_vendor_cm_file_format():
+    """
+    Get support file format for each vendor and technology
+    """
+    vendor_pk = request.args.get('vendor_id', None)
+    tech_pk = request.args.get('tech_id', None)
+
+    cm_file_format_schema = CMFileFormatsMASchema(many=True)
+
+    vendor_cm_formats = CMFileFormats.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).all()
+    result = cm_file_format_schema.dump(vendor_cm_formats)
+
+    return jsonify(result.data)
+
+
+@mod_settings.route('/network/technologies', methods=['GET'], strict_slashes=False)
 def get_supported_vendor_technologies():
+    """
+        Get supported technologies and vendors in the network
+    """
+
+    metadata = MetaData()
+    supported_vendor_tech = Table('vw_supported_vendor_tech', metadata, autoload=True, autoload_with=db.engine, schema='public')
+
+    data = [{"pk":x[0], "vendor": x[1], "technology": x[2]} for x in db.session.query(supported_vendor_tech).all()]
+    return jsonify(data)
+
+
+@mod_settings.route('/network/technologies/dt', methods=['GET'], strict_slashes=False)
+def get_supported_vendor_technologies_for_datatable():
     """
         Get supported technologies and vendors in the network
     """
@@ -153,6 +184,7 @@ def add_supported_vendor_technologies():
     db.session.commit()
 
     return jsonify({"status": "success"})
+
 
 @mod_settings.route('/network/technologies/<int:id>', methods=['DELETE'], strict_slashes=False)
 def delete_supported_vendor_technologies(id):

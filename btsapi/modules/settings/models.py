@@ -12,6 +12,24 @@ metadata = MetaData()
 #     __table__ = Table('settings', metadata, autoload=True, autoload_with=db.engine, schema='public')
 #     pass
 
+
+class CMFileFormats(db.Model):
+    """
+    CM file formats model
+    """
+
+    __tablename__ = 'cm_file_formats'
+
+    pk = db.Column(db.Integer,  db.Sequence('seq_cm_file_formats_pk',), primary_key=True, nullable=False )
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    label = db.Column(db.String(100), nullable=False)
+    vendor_pk = db.Column(db.Integer, nullable=False)
+    tech_pk = db.Column(db.Integer, nullable=False)
+    modified_by = db.Column(db.Integer)
+    added_by = db.Column(db.Integer)
+    date_added = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    date_modified = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+
 class Setting(db.Model):
     """Settings model"""
 
@@ -51,6 +69,7 @@ class SettingMASchema(ma.ModelSchema):
         model = Setting
         fields = ('id','name', 'label', 'value', 'category_id')
 
+
 class SupportedVendorTech(db.Model):
     """
     Supported vendor technologies model
@@ -71,3 +90,9 @@ class SupportedVendorTech(db.Model):
     def init(self, vendor_pk, tech_pk):
         self.tech_pk = tech_pk
         self.vendor_pk = vendor_pk
+
+
+class CMFileFormatsMASchema(ma.ModelSchema):
+    """CM File Format marshmallow schema"""
+    class Meta:
+        model = CMFileFormats

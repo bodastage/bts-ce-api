@@ -41,3 +41,4 @@ class ManagedObjectsMASchema(ma.ModelSchema):
     """Flask Marshmallow Schema for Managed objects model"""
     class Meta:
         model = ManagedObject
+
