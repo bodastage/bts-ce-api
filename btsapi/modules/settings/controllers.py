@@ -115,6 +115,12 @@ def get_supported_vendor_cm_file_format():
     vendor_pk = request.args.get('vendor_id', None)
     tech_pk = request.args.get('tech_id', None)
 
+    vendor_tech_pk = request.args.get('vendor_tech_id', None)
+    if vendor_tech_pk is not None:
+        vendor_tech = SupportedVendorTech.query.filter_by(pk=vendor_tech_pk).first()
+        vendor_pk = vendor_tech.vendor_pk
+        tech_pk = vendor_tech.tech_pk
+
     cm_file_format_schema = CMFileFormatsMASchema(many=True)
 
     vendor_cm_formats = CMFileFormats.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).all()
