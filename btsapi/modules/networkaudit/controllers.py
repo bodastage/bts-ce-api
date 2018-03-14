@@ -109,7 +109,12 @@ def download_rule_data(rule_id):
     outcsv = csv.writer(outfile)
     records = db.session.query(rule_table).all()
 
-    [outcsv.writerow([getattr(curr, column.name) for column in rule_table.columns]) for curr in records]
+    columns_to_skip = ['pk', 'added_by', 'modified_by']
+
+    outcsv.writerow([column.name.upper() for column in filter(lambda c: c.name not in columns_to_skip, rule_table.columns ) ])
+
+    [outcsv.writerow([getattr(curr, column.name) for column in filter(lambda c: c.name not in columns_to_skip, rule_table.columns ) ]) for curr in records]
+    # [outcsv.writerow([getattr(curr, column.name) for column in rule_table.columns]) for curr in records]
 
     outfile.close()
 
