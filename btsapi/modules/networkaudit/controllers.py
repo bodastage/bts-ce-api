@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
-                  jsonify, make_response
+                  jsonify, make_response, send_file
 from btsapi.modules.networkaudit.models import AuditCategory, AuditRule
 from btsapi.extensions import db
 import datetime
@@ -8,6 +8,7 @@ from datatables import DataTables, ColumnDT
 from flask_login import login_required
 from btsapi import  app
 from sqlalchemy import Table, MetaData
+import csv
 
 mod_networkaudit = Blueprint('netaudit', __name__, url_prefix='/api/networkaudit')
 
@@ -88,3 +89,29 @@ def get_rule_data(audit_id):
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
+
+
+@mod_networkaudit.route('/download/rule/<int:rule_id>', methods=['GET'])
+# @login_required
+def download_rule_data(rule_id):
+    """Download rule table """
+
+    rule = AuditRule.query.filter_by(pk=rule_id).first()
+    app.logger.info(rule)
+
+    metadata = MetaData()
+    rule_table = Table( rule.table_name, metadata, autoload=True, autoload_with=db.engine, schema='network_audit')
+
+    filename = "{}.csv".format(rule.name.lower().replace("\s+","_"))
+    path_to_file = '/tmp/{}'.format(filename)
+
+    outfile = open( path_to_file, 'wb')
+    outcsv = csv.writer(outfile)
+    records = db.session.query(rule_table).all()
+
+    [outcsv.writerow([getattr(curr, column.name) for column in rule_table.columns]) for curr in records]
+
+    outfile.close()
+
+    # return send_file(path_to_file, attachment_filename=filename, mimetype="text/plain")
+    return send_file(path_to_file, attachment_filename=filename, mimetype='application/octet-stream', as_attachment=True,)
