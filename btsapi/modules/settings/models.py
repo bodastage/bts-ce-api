@@ -30,6 +30,27 @@ class CMFileFormats(db.Model):
     date_added = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     date_modified = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
 
+
+class VendorCMFileFormatsMap(db.Model):
+    """
+    CM File format map
+    """
+    __tablename__ = 'vendors_cm_file_format_map'
+
+    pk = db.Column(db.Integer,  db.Sequence('seq_vendors_cm_file_format_map_pk',), primary_key=True, nullable=False )
+    vendor_tech_pk = db.Column(db.Integer, nullable=False)
+    format_pk = db.Column(db.Integer, nullable=False)
+    notes = db.Column(db.Text)
+    modified_by = db.Column(db.Integer)
+    added_by = db.Column(db.Integer)
+    date_added = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    date_modified = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+
+    def __init__(self, vendor_tech_pk, format_pk):
+        self.vendor_tech_pk = vendor_tech_pk
+        self.format_pk = format_pk
+
+
 class Setting(db.Model):
     """Settings model"""
 

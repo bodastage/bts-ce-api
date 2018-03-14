@@ -1,7 +1,8 @@
 from flask import Blueprint, request, render_template, \
     flash, g, session, redirect, url_for, \
     jsonify, make_response
-from btsapi.modules.settings.models import Setting, SettingMASchema, SupportedVendorTech, CMFileFormats, CMFileFormatsMASchema
+from btsapi.modules.settings.models import Setting, SettingMASchema, SupportedVendorTech, CMFileFormats, \
+    CMFileFormatsMASchema, VendorCMFileFormatsMap
 from btsapi.extensions import  db
 import datetime
 import math
@@ -127,6 +128,42 @@ def get_supported_vendor_cm_file_format():
     result = cm_file_format_schema.dump(vendor_cm_formats)
 
     return jsonify(result.data)
+
+
+@mod_settings.route('/cm/vendor_format_map/<int:format_id>',methods=['DELETE'], strict_slashes=False)
+@login_required
+def delete_supported_vendor_cm_file_format(format_id):
+    """
+    Get support file format for each vendor and technology
+    """
+    VendorCMFileFormatsMap.query.filter_by(pk=format_id).delete()
+
+    db.session.commit()
+
+    return jsonify({"status": "success"})
+
+
+@mod_settings.route('/cm/vendor_format_map',methods=['POST'], strict_slashes=False)
+@login_required
+def add_supported_vendor_cm_file_format():
+
+    content = request.get_json()
+
+    format_id = content['format_id']
+    vendor_tech_id = content['vendor_tech_id']
+
+    # Does the vendor to tech mapping exist?
+    vendor_tech = VendorCMFileFormatsMap.query.filter_by(vendor_tech_pk=vendor_tech_id, format_pk=format_id).first()
+
+    if vendor_tech is not None:
+        return jsonify({"message":"Vendor format already exists", "status":"error", "code": 409 })
+
+    cn_file_format = VendorCMFileFormatsMap(vendor_tech_pk=vendor_tech_id, format_pk=format_id)
+
+    db.session.add(cn_file_format)
+    db.session.commit()
+
+    return jsonify({"status": "success"})
 
 
 @mod_settings.route('/network/technologies', methods=['GET'], strict_slashes=False)
