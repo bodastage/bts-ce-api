@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
-                  jsonify, make_response
+                  jsonify, make_response, send_file
 from btsapi.modules.managedobjects.models import ManagedObject, ManagedObjectSchema, ManagedObjectsMASchema
 from btsapi.extensions import db
 import datetime
@@ -9,6 +9,7 @@ from sqlalchemy import  text, Table, MetaData
 import json
 from btsapi import app
 from flask_login import login_required
+import csv
 
 mod_managedobjects = Blueprint('managedobjects', __name__, url_prefix='/api/managedobjects')
 
@@ -25,62 +26,22 @@ def get_aci_tree_data(parent_pk):
     mo_aci_entries = []
     query = None
 
-    if vendor_pk is not None and tech_pk is not None and swversion_pk is None and parent_pk is None:
-        query = ManagedObject.query.filter_by(vendor_pk=vendor_pk,tech_pk=tech_pk)
+    metadata = MetaData()
+    ManagedObject = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
 
-    if vendor_pk is not None and tech_pk is None and swversion_pk is None and parent_pk is None:
-        query = ManagedObject.query.filter_by(vendor_pk=vendor_pk)
+    if vendor_pk is not None and tech_pk is not None and search_term is not None and len(search_term) == 0:
+        query = db.session.query(ManagedObject).filter_by(vendor_pk=vendor_pk,tech_pk=tech_pk)
 
-    if vendor_pk is not None and tech_pk is not None and swversion_pk is None and parent_pk is not None \
-            and search_term is not None and len(search_term) == 0:
-        query = ManagedObject.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk,parent_pk=parent_pk)
+    if vendor_pk is not None and tech_pk is not None and search_term is not None and len(search_term) > 0:
+        query = db.session.query(ManagedObject).filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).\
+            filter(ManagedObject.c.name.ilike('%{}%'.format(search_term))).filter(ManagedObject.c.pk != parent_pk)
 
-    if vendor_pk is not None and tech_pk is not None and swversion_pk is None and parent_pk is not None \
-            and search_term is not None and len(search_term) > 0:
-        query = ManagedObject.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).\
-            filter(ManagedObject.name.ilike('%{}%'.format(search_term))).filter(ManagedObject.pk != parent_pk)
-
-        # app.logger.info(str(query))
-        # app.logger.info("vendor_pk:{}, tech_pk:{} parent_pk:{}, search_term:{}".format(vendor_pk, tech_pk, parent_pk, search_term))
-        mo_children = []
-
-        aci_tree_nodes = []
-        for mo in query.all():
-            p_pk = mo.parent_pk
-            c_pk = mo.pk
-            c_name = mo.name
-
-            # app.logger.info("p_pk:{1}, c_pk:{0}, c_name: {2}".format(c_pk, p_pk, c_name))
-
-            # Mark whether an MO is before the parent
-            is_before_parent = False
-
-            while p_pk != parent_pk:
-                child_mo = ManagedObject.query.filter_by(pk=p_pk).first()
-
-                if child_mo is None:
-                    is_before_parent = True
-                    break
-                # app.logger.info("child_mo: {} pk:{}".format(child_mo.name, child_mo.pk))
-
-                p_pk = child_mo.parent_pk
-                c_pk = child_mo.pk
-                c_name = child_mo.name
-
-            if is_before_parent is True: continue
-
-            if c_name not in mo_children:
-                mo_aci_entries.append(dict(id=c_pk, label=c_name, inode=True, open=True))
-                mo_children.append(c_name)
-
-        # app.logger.info("Endi....")
-        return jsonify(mo_aci_entries)
 
     if query is None:
         return jsonify([])
 
     for mo in query.all():
-        mo_aci_entries.append(dict(id=mo.pk, label=mo.name, inode=True, open=False))
+        mo_aci_entries.append(dict(id=mo.pk, label=mo.name, inode=False, open=True))
 
     # @TODO: Add pagination
     return jsonify(mo_aci_entries)
@@ -116,7 +77,10 @@ def get_fields_in_mo_table(mo_pk):
     fields = []
 
     # Get the vendor and technology pk's
-    managedobject = ManagedObject.query.filter_by(pk=mo_pk).first()
+    metadata = MetaData()
+    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
+    managedobject = db.session.query(managedobject_table).filter_by(pk=mo_pk).first()
+
     vendor_pk = managedobject.vendor_pk
     tech_pk = managedobject.tech_pk
     mo_name = managedobject.name
@@ -125,9 +89,10 @@ def get_fields_in_mo_table(mo_pk):
     managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
     schema_name = managedobject_schema.name.lower()
     mo_table_name = "{0}.{1}".format(schema_name,mo_name)
+    # app.logger.info(mo_table_name)
 
     metadata = MetaData()
-    mo_data_table = Table(mo_name.lower(), metadata, autoload=True,autoload_with=db.engine, schema=schema_name)
+    mo_data_table = Table(mo_name, metadata, autoload=True,autoload_with=db.engine, schema=schema_name)
 
     fields = [c.name for c in mo_data_table.columns]
 
@@ -140,7 +105,11 @@ def get_dt_data(mo_pk):
     """Get managed objects values in jQuery datatables format"""
 
     # Get the vendor and technology pk's
-    managedobject = ManagedObject.query.filter_by(pk=mo_pk).first()
+    # managedobject = ManagedObject.query.filter_by(pk=mo_pk).first()
+    metadata = MetaData()
+    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
+    managedobject = db.session.query(managedobject_table).filter_by(pk=mo_pk).first()
+
     vendor_pk = managedobject.vendor_pk
     tech_pk = managedobject.tech_pk
     mo_name = managedobject.name
@@ -149,8 +118,8 @@ def get_dt_data(mo_pk):
     managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
     schema_name = managedobject_schema.name.lower()
 
-    metadata = MetaData()
-    mo_data_table = Table(mo_name.lower(), metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
+    # app.logger.info(schema_name)
+    mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
 
     columns = []
     for c in mo_data_table.columns:
@@ -164,3 +133,44 @@ def get_dt_data(mo_pk):
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
+
+
+@mod_managedobjects.route('/download/<int:mo_pk>/', methods=['GET'])
+# @login_required
+def download_managed_object_data(mo_pk):
+    """Download managed object data"""
+
+    # Get the vendor and technology pk's
+    metadata = MetaData()
+    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
+    managedobject = db.session.query(managedobject_table).filter_by(pk=mo_pk).first()
+
+    vendor_pk = managedobject.vendor_pk
+    tech_pk = managedobject.tech_pk
+    mo_name = managedobject.name
+
+    # Get the schema
+    managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
+    schema_name = managedobject_schema.name.lower()
+
+    # app.logger.info(schema_name)
+    mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
+
+    sanitized_filename = "{}".format(mo_name )
+    filename = "{}.csv".format(sanitized_filename)
+    path_to_file = '/tmp/{}'.format(filename)
+
+    outfile = open( path_to_file, 'wb')
+    outcsv = csv.writer(outfile)
+    records = db.session.query(mo_data_table).all()
+
+    # columns to skip
+    columns_to_skip = []
+
+    outcsv.writerow([column.name for column in filter(lambda c: c.name not in columns_to_skip, mo_data_table.columns ) ])
+
+    [outcsv.writerow([getattr(curr, column.name) for column in filter(lambda c: c.name not in columns_to_skip, mo_data_table.columns ) ]) for curr in records]
+
+    outfile.close()
+
+    return send_file(path_to_file, attachment_filename=filename, mimetype='application/octet-stream', as_attachment=True,)
