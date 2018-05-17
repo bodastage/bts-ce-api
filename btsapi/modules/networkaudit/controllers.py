@@ -97,12 +97,13 @@ def download_rule_data(rule_id):
     """Download rule table """
 
     rule = AuditRule.query.filter_by(pk=rule_id).first()
-    app.logger.info(rule)
+    category = AuditCategory.query.filter_by(pk=rule.category_pk).first()
 
     metadata = MetaData()
     rule_table = Table( rule.table_name, metadata, autoload=True, autoload_with=db.engine, schema='network_audit')
 
-    filename = "{}.csv".format(rule.name.lower().replace("\s+","_"))
+    sanitized_filename = "{}__{}".format(category.name.lower().replace(" ","_"), rule.name.lower().replace(" ","_") )
+    filename = "{}.csv".format(sanitized_filename)
     path_to_file = '/tmp/{}'.format(filename)
 
     outfile = open( path_to_file, 'wb')

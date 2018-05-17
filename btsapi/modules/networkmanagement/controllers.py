@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
-                  jsonify, make_response
+                  jsonify, make_response, send_file
 from btsapi.modules.networkmanagement.models import LiveCell3G, LiveCell3GMASchema
 from btsapi.extensions import  db
 import datetime
@@ -9,6 +9,7 @@ from sqlalchemy import Table, MetaData
 from datatables import DataTables, ColumnDT
 from btsapi import app
 from flask_login import login_required
+import csv
 
 mod_netmgt = Blueprint('networkmanagement', __name__, url_prefix='/api/network')
 
@@ -268,3 +269,38 @@ def get_external_cells_dt_data():
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/download/<entity_types>', methods=['GET'], strict_slashes=False)
+def download_network_entities(entity_types):
+    """Download  network entities """
+    metadata = MetaData()
+
+    entity_table_map = {"nodes":"nodes", "sites": "vw_sites", "relations":"vw_relations"}
+
+    table_name = entity_types  # nodes,
+
+    if entity_types in entity_table_map:
+        table_name = entity_table_map[entity_types]  # nodes,
+
+    table = Table( table_name, metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    sanitized_filename = "{}".format(entity_types.lower().replace(" ","_") )
+    filename = "{}.csv".format(sanitized_filename)
+    path_to_file = '/tmp/{}'.format(filename)
+
+    outfile = open( path_to_file, 'wb')
+    outcsv = csv.writer(outfile)
+    records = db.session.query(table).all()
+
+    columns_to_skip = ['pk', 'added_by', 'modified_by','notes', 'tech_pk', 'vendor_pk']
+
+    outcsv.writerow([column.name.upper() for column in filter(lambda c: c.name not in columns_to_skip, table.columns ) ])
+
+    [outcsv.writerow([getattr(curr, column.name) for column in filter(lambda c: c.name not in columns_to_skip, table.columns ) ]) for curr in records]
+    # [outcsv.writerow([getattr(curr, column.name) for column in rule_table.columns]) for curr in records]
+
+    outfile.close()
+
+    # return send_file(path_to_file, attachment_filename=filename, mimetype="text/plain")
+    return send_file(path_to_file, attachment_filename=filename, mimetype='application/octet-stream', as_attachment=True,)
