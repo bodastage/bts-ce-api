@@ -11,6 +11,8 @@ from sqlalchemy import update,  Table, MetaData
 from btsapi import app
 from datatables import DataTables, ColumnDT
 import json
+import requests
+import time
 
 mod_settings = Blueprint('settings', __name__, url_prefix='/api/settings')
 
@@ -241,5 +243,16 @@ def delete_supported_vendor_technologies(id):
     SupportedVendorTech.query.filter_by(pk=id).delete()
 
     db.session.commit()
+
+    return jsonify({"status": "success"})
+
+
+@mod_settings.route('/cm/run', methods=['GET'],  strict_slashes=False)
+def run_cm_etl_processes():
+    """Trigger CM ETL dag run"""
+    response = requests.post('http://192.168.99.100:8080/api/experimental/dags/cm_etlp/dag_runs', \
+                             json={"run_id":"cm_etlp_{}".format(time.time())})
+    if response.status_code != 200 :
+        return jsonify({"status": "failed"}), 401
 
     return jsonify({"status": "success"})
