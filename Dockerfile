@@ -19,4 +19,4 @@ COPY ./wait-for-postgres.sh /wait-for-postgres.sh
 EXPOSE 8181
 
 # Start gunicorn
-CMD ["/wait-for-postgres.sh", "/usr/bin/gunicorn", "--config", "/app/gunicorn_config.py", "wsgi:app"]
+CMD ["/wait-for-postgres.sh", "database", "/usr/bin/gunicorn", "--config", "/app/gunicorn_config.py", "wsgi:app"]
