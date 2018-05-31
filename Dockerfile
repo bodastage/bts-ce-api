@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-MAINTAINER Bodastage Engineering <dev@bodastage.com>
+MAINTAINER Bodastage Engineering <engineering@bodastage.com>
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -13,7 +13,10 @@ COPY ./requirements.txt /deploy/requirements.txt
 RUN pip install -r /deploy/requirements.txt
 WORKDIR /app
 
+# 
+COPY ./wait-for-postgres.sh /wait-for-postgres.sh
+
 EXPOSE 8181
 
 # Start gunicorn
-CMD ["/usr/bin/gunicorn", "--config", "/app/gunicorn_config.py", "wsgi:app"]
+CMD ["/wait-for-postgres.sh", "/usr/bin/gunicorn", "--config", "/app/gunicorn_config.py", "wsgi:app"]
