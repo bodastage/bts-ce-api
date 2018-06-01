@@ -4,7 +4,7 @@ MAINTAINER Bodastage Engineering <engineering@bodastage.com>
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update
-RUN apt-get install -y python python-pip python-virtualenv gunicorn
+RUN apt-get install -y python python-pip python-virtualenv gunicorn netcat
 
 # Setup flask application
 RUN mkdir -p /deploy/
@@ -20,4 +20,4 @@ RUN chmod 777 /wait-for-postgres.sh
 EXPOSE 8181
 
 # Start gunicorn
-CMD ["/wait-for-postgres.sh", "database", "/usr/bin/gunicorn", "--config", "/app/gunicorn_config.py", "wsgi:app"]
+CMD ["/usr/bin/gunicorn", "--config", "/app/gunicorn_config.py", "wsgi:app"]
