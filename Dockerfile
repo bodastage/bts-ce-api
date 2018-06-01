@@ -14,8 +14,8 @@ RUN pip install -r /deploy/requirements.txt
 WORKDIR /app
 
 # 
-COPY ./wait-for-postgres.sh /wait-for-postgres.sh
-RUN chmod 777 /wait-for-postgres.sh
+COPY ./wait-for-it.sh /wait-for-it.sh
+RUN chmod 777 /wait-for-it.sh
 
 EXPOSE 8181
 
