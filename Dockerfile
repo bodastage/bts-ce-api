@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-MAINTAINER Bodastage Engineering <engineering@bodastage.com>
+LABEL maintainer Bodastage Engineering <engineering@bodastage.com>
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -10,7 +10,7 @@ RUN apt-get install -y python python-pip python-virtualenv gunicorn netcat
 RUN mkdir -p /deploy/
 RUN mkdir -p /app
 COPY ./requirements.txt /deploy/requirements.txt
-RUN pip install -r /deploy/requirements.txt
+RUN pip install -r /deploy/requirements.txt && pip install alembic
 WORKDIR /app
 
 # Create migrations folder

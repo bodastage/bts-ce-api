@@ -1,5 +1,5 @@
 flask
-psycopg2
+psycopg2-binary
 marshmallow
 sqlalchemy
 flask-sqlalchemy
