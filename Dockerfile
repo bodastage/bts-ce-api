@@ -13,7 +13,9 @@ COPY ./requirements.txt /deploy/requirements.txt
 RUN pip install -r /deploy/requirements.txt
 WORKDIR /app
 
-# 
+# Create migrations folder
+RUN mkdir -p /migrations && chmod -R 777  /migrations
+
 COPY ./wait-for-it.sh /wait-for-it.sh
 RUN chmod 777 /wait-for-it.sh
 
