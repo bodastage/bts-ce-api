@@ -17,7 +17,10 @@ WORKDIR /app
 RUN mkdir -p /migrations && chmod -R 777  /migrations
 
 COPY ./wait-for-it.sh /wait-for-it.sh
+COPY ./migrate-and-start-web-server.sh /migrate-and-start-web-server.sh
+
 RUN chmod 777 /wait-for-it.sh
+RUN chmod 777 /migrate-and-start-web-server.sh 
 
 EXPOSE 8181
 
