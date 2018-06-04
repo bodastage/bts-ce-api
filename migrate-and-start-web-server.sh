@@ -2,6 +2,9 @@
 
 set -x 
 
+# Wait abit for the database to startup
+sleep 10
+
 cd /migrations
 
 #Run migrations
