@@ -12,3 +12,4 @@ flask-cors
 sqlalchemy-datatables
 flask-login
 blinker
+requests
