@@ -53,4 +53,4 @@ class UserSchema(ma.ModelSchema):
 
     class Meta:
         model = User
-        fields = ('pk','username','password','first_name','last_name','other_names','job_title','phone_number','photo')
+        fields = ('pk','username','password','first_name','last_name','other_names','job_title','phone_number','photo', 'token')
