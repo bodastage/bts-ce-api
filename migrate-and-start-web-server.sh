@@ -3,7 +3,7 @@
 set -x 
 
 export FLASK_APP=wait_for_database.py
-flask run --host=0.0.0.0 --port=8181
+flask run --host=0.0.0.0 --port=8181 &
 
 # Wait abit for the database to startup
 sleep 10
