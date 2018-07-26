@@ -90,7 +90,7 @@ def get_relations_dt_data():
 
 @mod_netmgt.route('/nodes', methods=['GET'])
 @login_required
-def get_vendors():
+def get_nodes():
     """Get a list of all the vendors in the system"""
 
     metadata = MetaData()
@@ -105,6 +105,32 @@ def get_vendors():
     # GET request parameters
     params = request.args.to_dict()
     params = {"draw": 1 , "start": 0, "length": 10}
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/sites', methods=['GET'])
+@login_required
+def get_sites():
+    """Get a list of all the vendors in the system"""
+
+    metadata = MetaData()
+    sites_table = Table('vw_sites', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    for c in sites_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(sites_table)
+
+    length = request.args.get("length",100)
+    start = request.args.get("start", 0)
+
+    # GET request parameters
+    params = request.args.to_dict()
+    params = {"draw": 1 , "start": start, "length": length}
 
     row_table = DataTables(params, query, columns)
 
