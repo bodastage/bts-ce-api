@@ -88,6 +88,29 @@ def get_relations_dt_data():
     return jsonify(row_table.output_result())
 
 
+@mod_netmgt.route('/nodes', methods=['GET'])
+@login_required
+def get_vendors():
+    """Get a list of all the vendors in the system"""
+
+    metadata = MetaData()
+    nodes_table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    for c in nodes_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(nodes_table).filter(nodes_table.columns.nodename != 'SubNetwork')
+
+    # GET request parameters
+    params = request.args.to_dict()
+    params = {"draw": 1 , "start": 0, "length": 10}
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
 @mod_netmgt.route('/nodes/dt', methods=['GET'], strict_slashes=False)
 @login_required
 def get_nodes_dt_data():
@@ -117,6 +140,7 @@ def get_site_dt_data():
 
     metadata = MetaData()
     sites_table = Table('vw_sites', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
 
     columns = []
     for c in sites_table.columns:

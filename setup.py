@@ -7,7 +7,7 @@ setup(
     url="https://github.com/bodastage/bts-ce-api",
     author="Emmanuel Robert Ssebaggala",
     author_email="emmanuel.ssebaggala@bodastage.com",
-    description="REST API for Boda Telecom Suite Community Edition (BTS-CE). An open source vendor agnostic telecommunication network management platform",
+    description="REST API for Boda Telecom Suite Community Edition (BTS-CE). ",
     include_package_data=True,
     install_requires=[
         'flask',

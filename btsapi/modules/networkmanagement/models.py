@@ -6,7 +6,6 @@ from sqlalchemy import Table, MetaData, inspect
 
 metadata = MetaData()
 
-# @TODO: Write table definitions out. only reflection for the data tables
 
 class LiveCell(db.Model):
     """Create live network cells data model"""
