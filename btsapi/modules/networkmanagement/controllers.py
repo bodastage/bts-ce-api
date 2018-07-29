@@ -137,6 +137,77 @@ def get_sites():
     return jsonify(row_table.output_result())
 
 
+@mod_netmgt.route('/relations', methods=['GET'])
+@login_required
+def get_relations():
+    """Get a list of all the vendors in the system"""
+
+    metadata = MetaData()
+    sites_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    for c in sites_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(sites_table)
+
+    length = request.args.get("length",100)
+    start = request.args.get("start", 0)
+
+    # GET request parameters
+    params = request.args.to_dict()
+    params = {"draw": 1 , "start": start, "length": length}
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/cells', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cells_data():
+    """Get sites in jQuery datatable data format"""
+
+    tech_pk = request.args.get("tech_pk", "2")  # Default is 3G
+
+    cell_data_table = None
+
+    metadata = MetaData()
+
+    # UMTS Cells
+    if tech_pk == "2":
+        cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # GSM Cells
+    if tech_pk == "1":
+        cell_data_table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # LTE Cells
+    if tech_pk == "3":
+        cell_data_table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    columns = []
+    for c in cell_data_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(cell_data_table)
+
+
+    length = request.args.get("length",100)
+    start = request.args.get("start", 0)
+
+    # GET request parameters
+    params = request.args.to_dict()
+    params = {"draw": 1 , "start": start, "length": length}
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
 @mod_netmgt.route('/nodes/dt', methods=['GET'], strict_slashes=False)
 @login_required
 def get_nodes_dt_data():
