@@ -88,85 +88,186 @@ def get_relations_dt_data():
     return jsonify(row_table.output_result())
 
 
-@mod_netmgt.route('/nodes', methods=['GET'])
+@mod_netmgt.route('/live/nodes', methods=['GET'])
 @login_required
 def get_nodes():
-    """Get a list of all the vendors in the system"""
+    """Get a list of all the nodes in the system"""
+
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
 
     metadata = MetaData()
     nodes_table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
 
     columns = []
-    for c in nodes_table.columns:
-        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+    column_index = 0
+    for c in sites_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
 
     query = db.session.query(nodes_table).filter(nodes_table.columns.nodename != 'SubNetwork')
 
     # GET request parameters
-    params = request.args.to_dict()
-    params = {"draw": 1 , "start": 0, "length": 10}
+    # params = request.args.to_dict()
+    # params = {"draw": 1 , "start": 0, "length": 10}
 
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
 
 
-@mod_netmgt.route('/sites', methods=['GET'])
+@mod_netmgt.route('/live/nodes/fields', methods=['GET'])
+@login_required
+def get_node_view_fields():
+    """Get a list of all the nodes in the system"""
+
+    metadata = MetaData()
+    table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/sites/fields', methods=['GET'])
+@login_required
+def get_site_view_fields():
+    """Get a list of all the nodes in the system"""
+
+    metadata = MetaData()
+    table = Table('vw_sites', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/cells/gsm/fields', methods=['GET'])
+@login_required
+def get_gsm_cell_view_fields():
+    """Get the list of fields in the GSM cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/cells/umts/fields', methods=['GET'])
+@login_required
+def get_umts_cell_view_fields():
+    """Get the list of fields in the UMTS cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/cells/lte/fields', methods=['GET'])
+@login_required
+def get_lte_cell_view_fields():
+    """Get the list of fields in the LTE cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/relations/fields', methods=['GET'])
+@login_required
+def get_relations_view_fields():
+    """Get a list of all the nodes in the system"""
+
+    metadata = MetaData()
+    table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/sites', methods=['GET'])
 @login_required
 def get_sites():
     """Get a list of all the vendors in the system"""
+
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
 
     metadata = MetaData()
     sites_table = Table('vw_sites', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
 
     columns = []
+    column_index = 0
     for c in sites_table.columns:
-        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
 
     query = db.session.query(sites_table)
 
-    length = request.args.get("length",100)
-    start = request.args.get("start", 0)
-
-    # GET request parameters
-    params = request.args.to_dict()
-    params = {"draw": 1 , "start": start, "length": length}
-
-    row_table = DataTables(params, query, columns)
+    row_table = DataTables(params, query, columns, True)
 
     return jsonify(row_table.output_result())
 
 
-@mod_netmgt.route('/relations', methods=['GET'])
+@mod_netmgt.route('/live/relations', methods=['GET'])
 @login_required
 def get_relations():
     """Get a list of all the vendors in the system"""
 
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
     metadata = MetaData()
-    sites_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+    relations_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
 
     columns = []
-    for c in sites_table.columns:
-        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+    column_index = 0
+    for c in relations_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
 
-    query = db.session.query(sites_table)
-
-    length = request.args.get("length",100)
-    start = request.args.get("start", 0)
-
-    # GET request parameters
-    params = request.args.to_dict()
-    params = {"draw": 1 , "start": start, "length": length}
+    query = db.session.query(relations_table)
 
     row_table = DataTables(params, query, columns)
+
+    app.logger.info(params)
 
     return jsonify(row_table.output_result())
 
 
-@mod_netmgt.route('/live/cells', methods=['GET'], strict_slashes=False)
+@mod_netmgt.route('/live/cells/<tech>', methods=['GET'], strict_slashes=False)
 @login_required
-def get_cells_data():
+def get_cells_data(tech):
     """Get sites in jQuery datatable data format"""
+
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
 
     tech_pk = request.args.get("tech_pk", "2")  # Default is 3G
 
@@ -175,19 +276,69 @@ def get_cells_data():
     metadata = MetaData()
 
     # UMTS Cells
-    if tech_pk == "2":
+    if tech == "umts":
         cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
                                 schema='live_network')
 
     # GSM Cells
-    if tech_pk == "1":
+    if tech == "gsm":
         cell_data_table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine,
                                 schema='live_network')
 
     # LTE Cells
-    if tech_pk == "3":
+    if tech == "lte":
         cell_data_table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine,
                                 schema='live_network')
+
+    columns = []
+    column_index = 0
+    for c in cell_data_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
+
+    query = db.session.query(cell_data_table)
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/externals/<tech>', methods=['GET'], strict_slashes=False)
+@login_required
+def get_external_cells_data(tech):
+    """Get external cells parameter data in jQuery datatable data format"""
+
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
+    tech = 'gsm'
+    tech_pk = 1
+
+    if tech == 'gsm': tech_pk = 1
+    if tech == 'umts': tech_pk = 2
+    if tech == 'lte': tech_pk = 3
+
+    cell_data_table = None
+
+    metadata = MetaData()
+
+    # UMTS External Cells
+    if tech == "umts":
+        cell_data_table = Table('vw_umts_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # GSM External Cells
+    if tech == "gsm":
+        cell_data_table = Table('vw_gsm_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    if cell_data_table is None:
+        return jsonify([])
 
     columns = []
     for c in cell_data_table.columns:
@@ -195,17 +346,10 @@ def get_cells_data():
 
     query = db.session.query(cell_data_table)
 
-
-    length = request.args.get("length",100)
-    start = request.args.get("start", 0)
-
-    # GET request parameters
-    params = request.args.to_dict()
-    params = {"draw": 1 , "start": start, "length": length}
-
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
+
 
 
 @mod_netmgt.route('/nodes/dt', methods=['GET'], strict_slashes=False)
