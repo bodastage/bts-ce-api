@@ -2,7 +2,7 @@ flask
 psycopg2-binary
 marshmallow
 sqlalchemy
-flask-sqlalchemy
+git+https://github.com/erssebaggala/sqlalchemy-datatables.git@per_column_regex_filter#egg=sqlalchemy-datatables
 flask-jsontools
 flask-marshmallow
 marshmallow-sqlalchemy
