@@ -103,7 +103,7 @@ def get_nodes():
 
     columns = []
     column_index = 0
-    for c in sites_table.columns:
+    for c in nodes_table.columns:
         search_method = 'string_contains'
         if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
             search_method = 'regex'
@@ -231,7 +231,7 @@ def get_sites():
 @mod_netmgt.route('/live/relations', methods=['GET'])
 @login_required
 def get_relations():
-    """Get a list of all the vendors in the system"""
+    """Get a list of all network relations"""
 
     params = request.args.to_dict()
     params['draw']=1
@@ -305,6 +305,31 @@ def get_cells_data(tech):
 
     return jsonify(row_table.output_result())
 
+
+@mod_netmgt.route('/live/externals/gsm/fields', methods=['GET'])
+@login_required
+def get_gsm_externals_view_fields():
+    """Get the list of fields in the LTE cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_gsm_external_cells', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/externals/umts/fields', methods=['GET'])
+@login_required
+def get_umts_externals_view_fields():
+    """Get the list of fields in the LTE cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_umts_external_cells', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
 
 @mod_netmgt.route('/live/externals/<tech>', methods=['GET'], strict_slashes=False)
 @login_required
