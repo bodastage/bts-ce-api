@@ -74,6 +74,17 @@ def get_mos(vendor, tech):
     if vendor.lower() == 'huawei' and tech.lower() == 'lte':
         managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2, tech_pk=3).all()
 
+
+    if vendor.lower() == 'zte' and tech.lower() == 'gsm':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=3, tech_pk=1).all()
+
+    if vendor.lower() == 'zte' and tech.lower() == 'umts':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=3, tech_pk=2).all()
+
+    if vendor.lower() == 'zte' and tech.lower() == 'lte':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=3, tech_pk=3).all()
+
+
     if managedobjects is None:
         return jsonify([])
 
