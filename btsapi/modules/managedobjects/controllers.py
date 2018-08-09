@@ -1,7 +1,8 @@
 from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
                   jsonify, make_response, send_file
-from btsapi.modules.managedobjects.models import ManagedObject, ManagedObjectSchema, ManagedObjectsMASchema
+from btsapi.modules.managedobjects.models import ManagedObject, ManagedObjectSchema, ManagedObjectsMASchema, \
+    NormalizedManagedObjectsSchema
 from btsapi.extensions import db
 import datetime
 from datatables import DataTables, ColumnDT
@@ -45,6 +46,40 @@ def get_aci_tree_data(parent_pk):
 
     # @TODO: Add pagination
     return jsonify(mo_aci_entries)
+
+
+@mod_managedobjects.route('/<vendor>/<tech>', methods=['GET'])
+@login_required
+def get_mos(vendor, tech):
+    metadata = MetaData()
+    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
+
+    managedobjects = None
+
+    if vendor.lower() == 'ericsson' and tech.lower() == 'gsm':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=1, tech_pk=1).all()
+
+    if vendor.lower() == 'ericsson' and tech.lower() == 'umts':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=1, tech_pk=2).all()
+
+    if vendor.lower() == 'ericsson' and tech.lower() == 'lte':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=1, tech_pk=3).all()
+
+    if vendor.lower() == 'huawei' and tech.lower() == 'gsm':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2, tech_pk=1).all()
+
+    if vendor.lower() == 'huawei' and tech.lower() == 'umts':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2, tech_pk=2).all()
+
+    if vendor.lower() == 'huawei' and tech.lower() == 'lte':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2, tech_pk=3).all()
+
+    if managedobjects is None:
+        return jsonify([])
+
+    mo_schema = NormalizedManagedObjectsSchema()
+
+    return jsonify([mo_schema.dump(v).data for v in managedobjects],)
 
 
 @mod_managedobjects.route('/tree/cached', methods=['GET'])
@@ -122,8 +157,13 @@ def get_dt_data(mo_pk):
     mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
 
     columns = []
+    column_index = 0
     for c in mo_data_table.columns:
-        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
 
     query = db.session.query(mo_data_table)
 

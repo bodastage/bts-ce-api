@@ -1,6 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 from btsapi.extensions import db, ma
 import datetime
+from sqlalchemy import Table, MetaData, inspect
+
+
+metadata = MetaData()
 
 # @TODO: Add foreign key constraints
 class ManagedObject(db.Model):
@@ -42,3 +46,14 @@ class ManagedObjectsMASchema(ma.ModelSchema):
     class Meta:
         model = ManagedObject
 
+
+class NormalizedManagedObjects(db.Model):
+    """Create live network UMTS cells data model"""
+    __table__ = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine, schema='public')
+    pass
+
+
+class NormalizedManagedObjectsSchema(ma.ModelSchema):
+    """Live network UMTS cells marshmallow model"""
+    class Meta:
+        model = NormalizedManagedObjects

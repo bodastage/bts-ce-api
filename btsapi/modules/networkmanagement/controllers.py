@@ -112,10 +112,6 @@ def get_nodes():
 
     query = db.session.query(nodes_table).filter(nodes_table.columns.nodename != 'SubNetwork')
 
-    # GET request parameters
-    # params = request.args.to_dict()
-    # params = {"draw": 1 , "start": 0, "length": 10}
-
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
