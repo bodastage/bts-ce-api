@@ -35,3 +35,9 @@ class AuditRule(db.Model):
     in_built  = db.Column(db.Boolean)
     table_name = db.Column(db.String(200))
     sql = db.Column(db.Text)
+
+
+class AuditCategoryMASchema(ma.ModelSchema):
+    """Flask Marshmallow Schema for Managed objects model"""
+    class Meta:
+        model = AuditCategory

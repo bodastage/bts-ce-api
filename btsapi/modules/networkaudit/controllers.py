@@ -1,7 +1,8 @@
 from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
                   jsonify, make_response, send_file
-from btsapi.modules.networkaudit.models import AuditCategory, AuditRule
+from btsapi.modules.networkaudit.models import AuditCategory, \
+    AuditRule, AuditCategoryMASchema
 from btsapi.extensions import db
 import datetime
 from datatables import DataTables, ColumnDT
@@ -11,6 +12,29 @@ from sqlalchemy import Table, MetaData
 import csv
 
 mod_networkaudit = Blueprint('netaudit', __name__, url_prefix='/api/networkaudit')
+
+
+@mod_networkaudit.route('/rules', methods=['GET'])
+@login_required
+def get_audit_rules():
+    audit_categories = AuditCategory.query.all()
+    category_schema = AuditCategoryMASchema()
+
+    audit_rule_data = []
+
+    indx = 0
+    for c in audit_categories:
+        audit_rule_data.append({"cat_id": c.pk, "cat_name": c.name, "rules": []})
+        rules = AuditRule.query.filter_by(category_pk=c.pk).all()
+        for r in rules:
+            rule = {"id": r.pk, "name": r.name }
+            audit_rule_data[indx]["rules"].append(rule)
+        indx += 1
+        # app.logger.info(c)
+
+    app.logger.info(audit_rule_data)
+
+    return jsonify(audit_rule_data)
 
 
 @mod_networkaudit.route('/tree/<cat_or_rule>/<int:parent_pk>', methods=['GET'])
