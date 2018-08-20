@@ -29,25 +29,25 @@ def get_user(id):
     return jsonify(ma_schema.dump(User.query.get(id)).data)
 
 
-@mod_users.route('/<int:id>', methods=['PUT'])
+@mod_users.route('/<int:id>', methods=['POST','PUT'])
 @login_required
 def update_user(id):
     """Update user details"""
     content = request.get_json()
     user = User.query.filter_by(pk=id).first()
 
-    # @TODO: Throw exception if an attempt to change the user name is made here
+    # @TODO: Throw exception if an attempt to change the username/email is made here
 
     if "first_name" in content: user.first_name = content['first_name']
     if "last_name" in content: user.last_name = content['last_name']
     if "other_names" in content: user.other_names = content['other_names']
-    if "phone_number" in content: user.first_name = content['phone_number']
+    if "phone_number" in content: user.phone_number = content['phone_number']
     if "photo" in content: user.photo = content['photo']
-    if "password" in content: user.photo = content['password']
+    if "job_title" in content: user.job_title = content['job_title']
 
     db.session.commit()
 
-    return jsonify({})
+    return jsonify({"status": "OK"})
 
 
 @mod_users.route('/<int:id>', methods=['DELETE'])
