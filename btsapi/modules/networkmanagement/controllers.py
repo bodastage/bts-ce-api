@@ -1,11 +1,12 @@
 from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
                   jsonify, make_response, send_file
-from btsapi.modules.networkmanagement.models import LiveCell3G, LiveCell3GMASchema
+from btsapi.modules.networkmanagement.models import LiveCell3G, LiveCell3GMASchema, LiveCell
 from btsapi.extensions import  db
 import datetime
 import math
 from sqlalchemy import Table, MetaData
+from sqlalchemy.orm import load_only
 from datatables import DataTables, ColumnDT
 from btsapi import app
 from flask_login import login_required
@@ -115,6 +116,34 @@ def get_nodes():
     row_table = DataTables(params, query, columns)
 
     return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/list/<entity>', methods=['GET'])
+@login_required
+def get_entity_list(entity):
+    length = request.args.get("length",100)
+    start = request.args.get("start", 0)
+    parent_id = request.args.get("parent_id", None)
+
+    fields = request.args.get("fields", "")
+    metadata = MetaData()
+
+    table = None
+    columns = []
+    data = []
+    count = 0
+    specific_cols = fields.split(",")
+    if entity == 'node':
+        table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+        query = db.session.query(table.columns.id, table.columns.nodename, table.columns.vendor, table.columns.technology).\
+            filter(table.columns.nodename != 'SubNetwork')
+
+    count = query.count()
+
+    for row in query.all():
+        data.append({"id": row[0], "name": row[1], "vendor": row[2], "technology": row[3]})
+
+    return jsonify({"data": data, "total": count, "start": start, "length": length})
 
 
 @mod_netmgt.route('/live/nodes/fields', methods=['GET'])
@@ -253,6 +282,38 @@ def get_relations():
     app.logger.info(params)
 
     return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/cell/<int:cell_id>', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cell_data(cell_id):
+
+    cell_data_table = None
+    metadata = MetaData()
+
+    # cell = LiveCell.query.filter(pk=cell_id).first()
+    cell = db.session.query(LiveCell).filter_by(pk=cell_id).first()
+
+    if cell is None:
+        return jsonify({}, 404)
+    # UMTS Cells
+    if cell.tech_pk == 2:
+        cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # GSM Cells
+    if cell.tech_pk == 1:
+        cell_data_table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # LTE Cells
+    if cell.tech_pk == 3:
+        cell_data_table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    cell_data = db.session.query(cell_data_table).filter_by(cellname=cell.name).first()
+
+    return jsonify(cell_data._asdict())
 
 
 @mod_netmgt.route('/live/cells/<tech>', methods=['GET'], strict_slashes=False)
