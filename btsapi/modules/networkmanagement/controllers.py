@@ -5,7 +5,7 @@ from btsapi.modules.networkmanagement.models import LiveCell3G, LiveCell3GMASche
 from btsapi.extensions import  db
 import datetime
 import math
-from sqlalchemy import Table, MetaData
+from sqlalchemy import Table, MetaData, inspect
 from sqlalchemy.orm import load_only
 from datatables import DataTables, ColumnDT
 from btsapi import app
@@ -316,6 +316,30 @@ def get_cell_data(cell_id):
     return jsonify(cell_data._asdict())
 
 
+@mod_netmgt.route('/live/cellrelations/<int:cell_id>', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cell_relations(cell_id):
+
+    cell_data_table = None
+    metadata = MetaData()
+
+    # cell = LiveCell.query.filter(pk=cell_id).first()
+    cell = db.session.query(LiveCell).filter_by(pk=cell_id).first()
+
+    if cell is None:
+        return jsonify({}, 404)
+
+    relation_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine,
+                            schema='live_network')
+
+    cell_data = db.session.query(relation_table).filter_by(svrcell=cell.name).all()
+    columns = [c.name for c in relation_table.columns]
+
+    response_data = [{k: v for k, v in zip(columns, row)} for row in cell_data]
+
+    return jsonify([])
+
+
 @mod_netmgt.route('/live/cells/<tech>', methods=['GET'], strict_slashes=False)
 @login_required
 def get_cells_data(tech):
@@ -387,6 +411,7 @@ def get_umts_externals_view_fields():
     fields = [c.name for c in table.columns]
 
     return jsonify(fields)
+
 
 @mod_netmgt.route('/live/externals/<tech>', methods=['GET'], strict_slashes=False)
 @login_required
