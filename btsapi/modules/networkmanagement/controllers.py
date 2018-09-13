@@ -5,7 +5,7 @@ from btsapi.modules.networkmanagement.models import LiveCell3G, LiveCell3GMASche
 from btsapi.extensions import  db
 import datetime
 import math
-from sqlalchemy import Table, MetaData, inspect
+from sqlalchemy import Table, MetaData, or_
 from sqlalchemy.orm import load_only
 from datatables import DataTables, ColumnDT
 from btsapi import app
@@ -326,18 +326,52 @@ def get_cell_relations(cell_id):
     # cell = LiveCell.query.filter(pk=cell_id).first()
     cell = db.session.query(LiveCell).filter_by(pk=cell_id).first()
 
+    app.logger.info("cell.name {}".format(cell.name))
     if cell is None:
         return jsonify({}, 404)
 
     relation_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine,
                             schema='live_network')
 
-    cell_data = db.session.query(relation_table).filter_by(svrcell=cell.name).all()
+    cell_data = db.session.query(relation_table).filter(or_(
+                                     relation_table.columns.svrcell==cell.name, \
+                                     relation_table.columns.nbrcell == cell.name
+                                 )).all()
+
     columns = [c.name for c in relation_table.columns]
 
     response_data = [{k: v for k, v in zip(columns, row)} for row in cell_data]
 
-    return jsonify([])
+    return jsonify(response_data)
+
+
+@mod_netmgt.route('/live/cells', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cells():
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
+    metadata = MetaData()
+
+    cell_data_table = Table('cells', metadata, autoload=True, autoload_with=db.engine,
+                            schema='live_network')
+
+    columns = []
+    column_index = 0
+    for c in cell_data_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
+
+    query = db.session.query(cell_data_table)
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
 
 
 @mod_netmgt.route('/live/cells/<tech>', methods=['GET'], strict_slashes=False)
