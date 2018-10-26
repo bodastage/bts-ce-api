@@ -13,3 +13,4 @@ sqlalchemy-datatables
 flask-login
 blinker
 requests
+Flask-SQLAlchemy
