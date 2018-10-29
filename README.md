@@ -7,6 +7,7 @@ REST API for Boda Telecom Suite Enterprise Edition (BTS-EE). BTS-EE is a telecom
 - [Flask](http://flask.pocoo.org/)
 - [SQLAlchemy](https://www.sqlalchemy.org/)
 - [PostgreSQL](https://www.postgresql.org/)
+- [Flask-SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.3/)
 
 ## Running docker container manually
 
