@@ -1,7 +1,5 @@
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodastage/bts-ce-api.svg)]() [![Docker Automated build](https://img.shields.io/docker/automated/bodastage/bts-ce-api.svg)]() [![Docker Build Status](https://img.shields.io/docker/build/bodastage/bts-ce-api.svg)]() [![license](https://img.shields.io/github/license/bodastage/bts-ce-api.svg)](https://github.com/bodastage/bts-ce-api/blob/master/LICENCE) 
-
-## Boda Telecom Suite  REST API
-REST API for Boda Telecom Suite Communtiy Edition (BTS-CE). BTS-CE is an open source telecommunication network management platform.
+## Boda Telecom Suite Enterprise Edition REST API
+REST API for Boda Telecom Suite Enterprise Edition (BTS-EE). BTS-EE is a telecommunication network management platform.
 
 
 ## Built With
@@ -10,10 +8,24 @@ REST API for Boda Telecom Suite Communtiy Edition (BTS-CE). BTS-CE is an open so
 - [SQLAlchemy](https://www.sqlalchemy.org/)
 - [PostgreSQL](https://www.postgresql.org/)
 
+## Running docker container manually
+
+### Running from gitlab container registry
+```
+docker run \
+--name bts-ee-api \
+-e BTS_DB_HOST='192.168.99.100' \
+-e BTS_DB_DB='bts' \
+-e BTS_DB_USER='bodastage' \
+-e BTS_DB_PASS='password' \
+-e BTS_DB_PORT='5432' \
+-v `pwd`:/app \
+-p 8181:8181 registry.gitlab.com/bts-ee/bts-ee-api
+```
+
 ## Resources
 
-* [Communtiy Forum at TelecomHall.net](http://telecomHall.net)
-* [Online Documentation](http://bts.bodastage.org)
+* [Online Documentation](http://docs.bodastage.com)
 
 ## Copyright / License
 Copyright 2017 - 2018 [Bodastage Solutions](http://www.bodastage.com)
@@ -22,4 +34,7 @@ Licensed under the Apache License, Version 2.0 ; you may not use this work excep
 
 https://www.apache.org/licenses/LICENSE-2.0
 
+“Commons Clause” License Condition v1.0
+
+https://commonsclause.com/
 

@@ -1,3 +1,12 @@
+import os
+
+# Initialize the database details
+BTS_DB_HOST=os.environ['BTS_DB_HOST']
+BTS_DB_NAME=os.environ['BTS_DB_NAME']
+BTS_DB_USER=os.environ['BTS_DB_USER']
+BTS_DB_PASS=os.environ['BTS_DB_PASS']
+BTS_DB_PORT=os.environ['BTS_DB_PORT']
+
 # Statement for enabling the development environment
 DEBUG = True
 
@@ -8,7 +17,9 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # Define the database - we are working with
 # SQLite for this example
 #SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'app.db')
-SQLALCHEMY_DATABASE_URI = 'postgresql://bodastage:password@database/bts'
+# SQLALCHEMY_DATABASE_URI = 'postgresql://bodastage:password@database/bts'
+SQLALCHEMY_DATABASE_URI = 'postgresql://{2}:{3}@{0}:{4}/{1}'.\
+    format(BTS_DB_HOST, BTS_DB_NAME, BTS_DB_USER, BTS_DB_PASS, BTS_DB_PORT)
 DATABASE_CONNECT_OPTIONS = {}
 
 # Disable migration creation
