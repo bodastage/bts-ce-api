@@ -10,7 +10,7 @@ REST API for Boda Telecom Suite Enterprise Edition (BTS-EE). BTS-EE is a telecom
 
 ## Running docker container manually
 
-### Running from gitlab container registry
+### Gitlab container registry
 ```
 docker run \
 --name bts-ee-api \
@@ -34,7 +34,7 @@ Licensed under the Apache License, Version 2.0 ; you may not use this work excep
 
 https://www.apache.org/licenses/LICENSE-2.0
 
-“Commons Clause” License Condition v1.0
+"Commons Clause" License Condition v1.0
 
 https://commonsclause.com/
 
