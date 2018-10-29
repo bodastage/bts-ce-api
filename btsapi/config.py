@@ -1,12 +1,5 @@
 import os
 
-# Initialize the database details
-BTS_DB_HOST=os.environ['BTS_DB_HOST']
-BTS_DB_NAME=os.environ['BTS_DB_NAME']
-BTS_DB_USER=os.environ['BTS_DB_USER']
-BTS_DB_PASS=os.environ['BTS_DB_PASS']
-BTS_DB_PORT=os.environ['BTS_DB_PORT']
-
 # Statement for enabling the development environment
 DEBUG = True
 
@@ -15,8 +8,14 @@ import os
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))  
 
 # Define the database - we are working with
-SQLALCHEMY_DATABASE_URI = 'postgresql://{2}:{3}@{0}:{4}/{1}'.\
-    format(BTS_DB_HOST, BTS_DB_NAME, BTS_DB_USER, BTS_DB_PASS, BTS_DB_PORT)
+SQLALCHEMY_DATABASE_URI = 'postgresql://{0}:{1}@{2}:{3}/{4}'.format(
+                                os.getenv("BTS_DB_USER", "bodastage"),
+                                os.getenv("BTS_DB_PASS", "password"),
+                                os.getenv("BTS_DB_HOST", "192.168.99.100"),
+                                os.getenv("BTS_DB_PORT", "5432"),
+                                os.getenv("BTS_DB_NAME", "bts"),
+                            )
+
 DATABASE_CONNECT_OPTIONS = {}
 
 # Disable migration creation
