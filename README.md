@@ -16,7 +16,7 @@ REST API for Boda Telecom Suite Enterprise Edition (BTS-EE). BTS-EE is a telecom
 docker run \
 --name bts-ee-api \
 -e BTS_DB_HOST='192.168.99.100' \
--e BTS_DB_DB='bts' \
+-e BTS_DB_NAME='bts' \
 -e BTS_DB_USER='bodastage' \
 -e BTS_DB_PASS='password' \
 -e BTS_DB_PORT='5432' \
