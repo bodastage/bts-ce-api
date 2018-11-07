@@ -457,9 +457,6 @@ def get_external_cells_data(tech):
     params['length'] = request.args.get("length",10)
     params['start'] = request.args.get("start", 0)
 
-    tech = 'gsm'
-    tech_pk = 1
-
     if tech == 'gsm': tech_pk = 1
     if tech == 'umts': tech_pk = 2
     if tech == 'lte': tech_pk = 3
