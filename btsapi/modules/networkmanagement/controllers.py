@@ -475,6 +475,11 @@ def get_external_cells_data(tech):
         cell_data_table = Table('vw_gsm_external_cells', metadata, autoload=True, autoload_with=db.engine,
                                 schema='live_network')
 
+    # LTE External Cells
+    if tech == "lte":
+        cell_data_table = Table('vw_lte_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
     if cell_data_table is None:
         return jsonify([])
 
