@@ -447,6 +447,19 @@ def get_umts_externals_view_fields():
     return jsonify(fields)
 
 
+@mod_netmgt.route('/live/externals/lte/fields', methods=['GET'])
+@login_required
+def get_lte_externals_view_fields():
+    """Get the list of fields in the LTE cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_lte_external_cells', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
 @mod_netmgt.route('/live/externals/<tech>', methods=['GET'], strict_slashes=False)
 @login_required
 def get_external_cells_data(tech):
