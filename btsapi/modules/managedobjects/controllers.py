@@ -210,7 +210,7 @@ def download_managed_object_data(mo_pk):
     schema_name = managedobject_schema.name.lower()
 
     if vendor_pk == 2: schema_name = 'huawei_cm'
-    
+
     # app.logger.info(schema_name)
     mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
 
