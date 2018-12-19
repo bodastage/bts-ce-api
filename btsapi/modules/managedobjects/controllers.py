@@ -134,6 +134,9 @@ def get_fields_in_mo_table(mo_pk):
     # Get the schema
     managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
     schema_name = managedobject_schema.name.lower()
+
+    if vendor_pk == 2: schema_name = 'huawei_cm'
+
     mo_table_name = "{0}.{1}".format(schema_name,mo_name)
     # app.logger.info(mo_table_name)
 
@@ -163,6 +166,8 @@ def get_dt_data(mo_pk):
     # Get the schema
     managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
     schema_name = managedobject_schema.name.lower()
+
+    if vendor_pk == 2: schema_name = 'huawei_cm'
 
     # app.logger.info(schema_name)
     mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
@@ -204,6 +209,8 @@ def download_managed_object_data(mo_pk):
     managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
     schema_name = managedobject_schema.name.lower()
 
+    if vendor_pk == 2: schema_name = 'huawei_cm'
+    
     # app.logger.info(schema_name)
     mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
 
