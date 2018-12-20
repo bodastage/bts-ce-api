@@ -29,7 +29,7 @@ RUN mkdir -p /migrations && chmod -R 777  /migrations && mkdir -p /python37 && c
 
 RUN virtualenv -p /usr/local/bin/python3.7 /python37 \
     && chmod 777 /python37/bin/activate \
-    && && chmod 777 /python37/bin/activate \
+    && chmod 777 /python37/bin/activate \
     && /python37/bin/activate \
     && pip3.7 install sqlalchemy alembic psycopg2-binary \
     && /python37/bin/deactivate
