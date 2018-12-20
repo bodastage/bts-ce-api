@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update
 RUN apt-get install -y python python-pip python-virtualenv gunicorn netcat git wget zlib1g-dev libffi-dev \
-    libssl-dev source
+    libssl-dev
 
 # Setup flask application
 RUN mkdir -p /deploy/
