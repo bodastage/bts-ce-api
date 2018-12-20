@@ -21,7 +21,7 @@ RUN mkdir /tmp/Python37 \
     && cd /tmp/Python37/Python-3.7.1 \
     && ./configure \
     && make altinstall \
-    && pip3.7 -r /deploy/requirements.txt
+    && pip3.7 install -r /deploy/requirements.txt
 
 # Create migrations folder
 RUN mkdir -p /migrations && chmod -R 777  /migrations
