@@ -11,7 +11,7 @@ RUN apt-get install -y python python-pip python-virtualenv gunicorn netcat git w
 RUN mkdir -p /deploy/
 RUN mkdir -p /app
 COPY ./requirements.txt /deploy/requirements.txt
-RUN pip install -r /deploy/requirements.txt && pip install alembic
+RUN pip install -r /deploy/requirements.txt && pip install alembic virtualenv
 WORKDIR /app
 
 # Install python 3.7
@@ -24,8 +24,10 @@ RUN mkdir /tmp/Python37 \
     && make altinstall \
     && pip3.7 install -r /deploy/requirements.txt
 
-# Create migrations folder
-RUN mkdir -p /migrations && chmod -R 777  /migrations
+# Create migrations and virtual env folder
+RUN mkdir -p /migrations && chmod -R 777  /migrations && mkdir -p /python37 && chmod -R 777  /python37
+
+RUN virtualenv -p /usr/bin/python3.7 /python37
 
 COPY ./wait-for-it.sh /wait-for-it.sh
 COPY ./migrate-and-start-web-server.sh /migrate-and-start-web-server.sh
