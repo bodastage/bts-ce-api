@@ -4,7 +4,7 @@ LABEL maintainer Bodastage Engineering <engineering@bodastage.com>
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update
-RUN apt-get install -y python python-pip python-virtualenv gunicorn netcat git
+RUN apt-get install -y python python-pip python-virtualenv gunicorn netcat git wget
 
 # Setup flask application
 RUN mkdir -p /deploy/
