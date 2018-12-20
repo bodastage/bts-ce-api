@@ -16,10 +16,10 @@ WORKDIR /app
 # Install python 3.7
 RUN mkdir /tmp/Python37 \
     && cd /tmp/Python37 \
-    && wget https://www.python.org/ftp/python/3.7.0/Python-3.7.1.tar.xz
-    && cd /tmp/Python37/Python-3.7.1
-    && ./configure
-    && sudo make altinstall
+    && wget https://www.python.org/ftp/python/3.7.0/Python-3.7.1.tar.xz \
+    && cd /tmp/Python37/Python-3.7.1 \
+    && ./configure \
+    && sudo make altinstall \
     && pip3.7 -r /deploy/requirements.txt
 
 # Create migrations folder
