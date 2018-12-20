@@ -27,7 +27,10 @@ RUN mkdir /tmp/Python37 \
 # Create migrations and virtual env folder
 RUN mkdir -p /migrations && chmod -R 777  /migrations && mkdir -p /python37 && chmod -R 777  /python37
 
-RUN virtualenv -p /usr/local/bin/python3.7 /python37
+RUN virtualenv -p /usr/local/bin/python3.7 /python37 \
+    && source /python37/bin/activate \
+    && pip3.7 install sqlalchemy alembic psycopg2-binary
+    && /python37/bin/deactivate
 
 COPY ./wait-for-it.sh /wait-for-it.sh
 COPY ./migrate-and-start-web-server.sh /migrate-and-start-web-server.sh
