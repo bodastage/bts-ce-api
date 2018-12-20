@@ -27,7 +27,7 @@ RUN mkdir /tmp/Python37 \
 # Create migrations and virtual env folder
 RUN mkdir -p /migrations && chmod -R 777  /migrations && mkdir -p /python37 && chmod -R 777  /python37
 
-RUN virtualenv -p /usr/bin/python3.7 /python37
+RUN virtualenv -p /usr/local/bin/python3.7 /python37
 
 COPY ./wait-for-it.sh /wait-for-it.sh
 COPY ./migrate-and-start-web-server.sh /migrate-and-start-web-server.sh
