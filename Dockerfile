@@ -20,7 +20,7 @@ RUN mkdir /tmp/Python37 \
     && tar xzf /tmp/Python37/Python-3.7.1.tgz \
     && cd /tmp/Python37/Python-3.7.1 \
     && ./configure \
-    && sudo make altinstall \
+    && make altinstall \
     && pip3.7 -r /deploy/requirements.txt
 
 # Create migrations folder
