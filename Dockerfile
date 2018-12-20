@@ -17,7 +17,7 @@ WORKDIR /app
 RUN mkdir /tmp/Python37 \
     && cd /tmp/Python37 \
     && wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tar.xz \
-    && tar xzf /tmp/Python-3.7.1.tar.xz \
+    && tar xzf /tmp/Python37/Python-3.7.1.tar.xz \
     && cd /tmp/Python37/Python-3.7.1 \
     && ./configure \
     && sudo make altinstall \
