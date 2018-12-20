@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update
 RUN apt-get install -y python python-pip python-virtualenv gunicorn netcat git wget zlib1g-dev libffi-dev \
-    libssl-dev
+    libssl-dev source
 
 # Setup flask application
 RUN mkdir -p /deploy/
@@ -28,8 +28,8 @@ RUN mkdir /tmp/Python37 \
 RUN mkdir -p /migrations && chmod -R 777  /migrations && mkdir -p /python37 && chmod -R 777  /python37
 
 RUN virtualenv -p /usr/local/bin/python3.7 /python37 \
-    && chmod 777 /python37/bin/activate \
-    && /python37/bin/activate \
+#    && chmod 777 /python37/bin/activate \
+    && source /python37/bin/activate \
     && pip3.7 install sqlalchemy alembic psycopg2-binary
 
 COPY ./wait-for-it.sh /wait-for-it.sh
