@@ -10,8 +10,10 @@ sleep 10
 
 cd /migrations
 
+source /python37/bin/activate
 #Run migrations
-alembic upgrade head 
+alembic upgrade head
+deactivate
 
 # Stop the wait for database service 
 pid=$(ps -ef | grep "flask run " | grep -v grep | awk '{print $2}')
