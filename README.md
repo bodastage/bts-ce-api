@@ -15,7 +15,7 @@ REST API for Boda Telecom Suite Communtiy Edition (BTS-CE). BTS-CE is an open so
 ### Dockerhub container registry
 ```
 docker run \
---name bts-ee-api \
+--name bts-ce-api \
 -e BTS_DB_HOST='192.168.99.100' \
 -e BTS_DB_NAME='bts' \
 -e BTS_DB_USER='bodastage' \
@@ -28,7 +28,7 @@ docker run \
 ### Gitlab container registry
 ```
 docker run \
---name bts-ee-api \
+--name bts-ce-api \
 -e BTS_DB_HOST='192.168.99.100' \
 -e BTS_DB_NAME='bts' \
 -e BTS_DB_USER='bodastage' \
