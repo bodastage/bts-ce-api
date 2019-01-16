@@ -191,6 +191,73 @@ def get_dt_data(mo_pk):
     return jsonify(row_table.output_result())
 
 
+@mod_managedobjects.route('/fields/<string:mo_vendor>/', methods=['GET'])
+@login_required
+def get_fields_in_mo_table_by_mo_name(mo_vendor):
+    """Get the column files in the managed objects cm data table"""
+
+    fields = []
+
+    vendor_name = mo_vendor.split("-")[1]
+    mo_name = mo_vendor.split("-")[0]
+
+    schema_name = None
+
+    if vendor_name.lower() == 'ericsson': schema_name = 'ericsson_cm'
+    if vendor_name.lower() == 'huawei': schema_name = 'huawei_cm'
+    if vendor_name.lower() == 'zte': schema_name = 'zte_cm'
+    if vendor_name.lower() == 'nokia': schema_name = 'nokia_cm'
+
+    mo_table_name = "{0}.{1}".format(schema_name,mo_name)
+    app.logger.info(mo_table_name)
+
+    metadata = MetaData()
+    mo_data_table = Table(mo_name, metadata, autoload=True,autoload_with=db.engine, schema=schema_name)
+
+    fields = [c.name for c in mo_data_table.columns]
+
+    return jsonify(fields)
+
+
+@mod_managedobjects.route('/dt/<string:mo_vendor>/', methods=['GET'])
+@login_required
+def get_mo_dt_data(mo_vendor):
+    """Get managed objects values in jQuery datatables format"""
+
+    metadata = MetaData()
+
+    vendor_name = mo_vendor.split("-")[1]
+    mo_name = mo_vendor.split("-")[0]
+
+    schema_name = None
+
+    if vendor_name.lower() == 'ericsson': schema_name = 'ericsson_cm'
+    if vendor_name.lower() == 'huawei': schema_name = 'huawei_cm'
+    if vendor_name.lower() == 'zte': schema_name = 'zte_cm'
+    if vendor_name.lower() == 'nokia': schema_name = 'nokia_cm'
+
+    # app.logger.info(schema_name)
+    mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
+
+    columns = []
+    column_index = 0
+    for c in mo_data_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
+
+    query = db.session.query(mo_data_table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
 @mod_managedobjects.route('/download/<int:mo_pk>/', methods=['GET'])
 # @login_required
 def download_managed_object_data(mo_pk):
