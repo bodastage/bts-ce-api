@@ -120,6 +120,7 @@ from btsapi.modules.managedobjects.controllers import mod_managedobjects as mod_
 from btsapi.modules.networkmanagement.controllers import mod_netmgt as mod_netmgt
 from btsapi.modules.settings.controllers import mod_settings as mod_settings
 from btsapi.modules.networkaudit.controllers import mod_networkaudit as mod_networkaudit
+from btsapi.modules.reports.controllers import mod_reports as mod_reports
 
 # Register blueprint(s)
 app.register_blueprint(vendors_module)
@@ -131,7 +132,7 @@ app.register_blueprint(mod_managedobjects)
 app.register_blueprint(mod_netmgt)
 app.register_blueprint(mod_settings)
 app.register_blueprint(mod_networkaudit)
-
+app.register_blueprint(mod_reports)
 
 # TP error handling
 @app.errorhandler(404)
