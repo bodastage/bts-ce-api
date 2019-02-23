@@ -1,241 +1,85 @@
 from flask import Blueprint, request, render_template, \
                   flash, g, session, redirect, url_for, \
                   jsonify, make_response, send_file
-from btsapi.modules.managedobjects.models import ManagedObject, ManagedObjectSchema, ManagedObjectsMASchema, \
-    NormalizedManagedObjectsSchema
-from btsapi.extensions import db
+from btsapi.modules.networkmanagement.models import LiveCell3G, LiveCell3GMASchema, LiveCell
+from btsapi.extensions import  db
 import datetime
+import math
+from sqlalchemy import Table, MetaData, or_
+from sqlalchemy.orm import load_only
 from datatables import DataTables, ColumnDT
-from sqlalchemy import  text, Table, MetaData
-import json
 from btsapi import app
 from flask_login import login_required
 import csv
 
-mod_managedobjects = Blueprint('managedobjects', __name__, url_prefix='/api/managedobjects')
+mod_netmgt = Blueprint('networkmanagement', __name__, url_prefix='/api/network')
 
 
-@mod_managedobjects.route('/tree/<int:parent_pk>/', methods=['GET'])
+@mod_netmgt.route('/live/cells/3g', methods=['GET'], strict_slashes=False)
 @login_required
-def get_aci_tree_data(parent_pk):
-    """Get aci tree data for managed objects"""
-    vendor_pk = request.args.get('vendor_pk', None)
-    tech_pk = request.args.get('tech_pk', None)
-    swversion_pk = request.args.get('swversion_pk', None)
-    search_term = request.args.get('search_term', None)
+def get_live_network_cells():
+    page = request.args.get('page', 0)
+    size = request.args.get('size', 10)
+    search = request.args.get('search', None)
 
-    mo_aci_entries = []
-    query = None
+    # includes direction i.e column:asc or column:desc , default is natual order
+    order_by = request.args.get('order_by', None)
 
-    metadata = MetaData()
-    ManagedObject = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
+    total = LiveCell3G.query.count()
 
-    if vendor_pk is not None and tech_pk is not None and search_term is not None and len(search_term) == 0:
-        query = db.session.query(ManagedObject).filter_by(vendor_pk=vendor_pk,tech_pk=tech_pk)
+    query = LiveCell3G.query.limit(size).offset(page)
 
-    if vendor_pk is not None and tech_pk is not None and search_term is not None and len(search_term) > 0:
-        query = db.session.query(ManagedObject).filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).\
-            filter(ManagedObject.c.name.ilike('%{}%'.format(search_term))).filter(ManagedObject.c.pk != parent_pk)
+    # @TODO: Add search filter
+    if search is not None:
+        query = query.filter(LiveCell3G.name.ilike('%{}%'.format(search)))
+
+    if order_by is not None:
+        query = query.order_by(order_by)
+
+    cell_schema = LiveCell3GMASchema()
+
+    pages = int(math.ceil(total/float(size)))
+    return jsonify({
+        "content":     [cell_schema.dump(v).data for v in query.all()],
+        "size": size,
+        "page": page,
+        "last": ( int(page) == pages),
+        "total": total,
+        "pages": pages
+    })
 
 
-    if query is None:
-        return jsonify([])
-
-    for mo in query.all():
-        mo_aci_entries.append(dict(id=mo.pk, label=mo.name, inode=False, open=True))
-
-    # @TODO: Add pagination
-    return jsonify(mo_aci_entries)
-
-
-@mod_managedobjects.route('/<vendor>/<tech>', methods=['GET'])
+@mod_netmgt.route('/tree/cached', methods=['GET'], strict_slashes=False)
 @login_required
-def get_mos(vendor, tech):
-    metadata = MetaData()
-    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
+def get_network_tree():
+    """Get network pre computed live network tree"""
+    source = request.args.get('source', "live") # live or plan
 
-    managedobjects = None
-
-    if vendor.lower() == 'ericsson' and tech.lower() == 'gsm':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=1, tech_pk=1).all()
-
-    if vendor.lower() == 'ericsson' and tech.lower() == 'umts':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=1, tech_pk=2).all()
-
-    if vendor.lower() == 'ericsson' and tech.lower() == 'lte':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=1, tech_pk=3).all()
-
-    if vendor.lower() == 'huawei' and tech.lower() == 'gsm':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2, tech_pk=1).all()
-
-    if vendor.lower() == 'huawei' and tech.lower() == 'umts':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2, tech_pk=2).all()
-
-    if vendor.lower() == 'huawei' and tech.lower() == 'lte':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2, tech_pk=3).all()
-
-
-    if vendor.lower() == 'zte' and tech.lower() == 'gsm':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=3, tech_pk=1).all()
-
-    if vendor.lower() == 'zte' and tech.lower() == 'umts':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=3, tech_pk=2).all()
-
-    if vendor.lower() == 'zte' and tech.lower() == 'lte':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=3, tech_pk=3).all()
-
-
-    if managedobjects is None:
-        return jsonify([])
-
-    mo_schema = NormalizedManagedObjectsSchema()
-
-    return jsonify([mo_schema.dump(v).data for v in managedobjects],)
-
-
-@mod_managedobjects.route('/<vendor>', methods=['GET'])
-@login_required
-def get_mos_per_vendor(vendor):
-    metadata = MetaData()
-    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
-
-    managedobjects = None
-
-    if vendor.lower() == 'ericsson' :
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=1).with_entities("name").distinct().all()
-
-
-    if vendor.lower() == 'huawei':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2).with_entities("name").distinct().all()
-
-
-    if vendor.lower() == 'zte':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=3).with_entities("name").distinct().all()
-
-    if vendor.lower() == 'nokia':
-        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=4).with_entities("name").distinct().all()
-
-    if managedobjects is None:
-        return jsonify([])
-
-    mo_schema = NormalizedManagedObjectsSchema()
-
-    return jsonify([mo_schema.dump(v).data for v in managedobjects],)
-
-
-@mod_managedobjects.route('/tree/cached', methods=['GET'])
-@login_required
-def get_cached_mo_tree():
-    """Get aci tree data from precomputed tree from the db"""
-    vendor_pk = request.args.get("vendor_pk", None)
-    tech_pk = request.args.get('tech_pk', None)
-
+    # @TODO: Create model definitions
     metadata = MetaData()
     cache_table = Table('cache', metadata, autoload=True, autoload_with=db.engine, schema='public')
 
-    # vendor = Ericsson, technology = UMTS or LTE
-    if int(vendor_pk) == 1 and int(tech_pk) == 2:
-        response = app.response_class(
-            response=db.session.query(cache_table).filter_by(name="mo_aci_tree").first().data,
-            status=200,
-            mimetype='application/json'
-        )
-        return response
-
-    return jsonify([])
+    response = app.response_class(
+        response=db.session.query(cache_table).filter_by(name="live_network_aci_tree").first().data,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
-@mod_managedobjects.route('/fields/<int:mo_pk>/', methods=['GET'])
+@mod_netmgt.route('/relations/dt', methods=['GET'], strict_slashes=False)
 @login_required
-def get_fields_in_mo_table(mo_pk):
-    """Get the column files in the managed objects cm data table"""
-
-    fields = []
-
-    # Get the vendor and technology pk's
-    metadata = MetaData()
-    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
-    managedobject = db.session.query(managedobject_table).filter_by(pk=mo_pk).first()
-
-    vendor_pk = managedobject.vendor_pk
-    tech_pk = managedobject.tech_pk
-    mo_name = managedobject.name
-
-    # Get the schema
-    managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
-    schema_name = managedobject_schema.name.lower()
-
-    if vendor_pk == 2: schema_name = 'huawei_cm'
-
-    mo_table_name = "{0}.{1}".format(schema_name,mo_name)
-    # app.logger.info(mo_table_name)
+def get_relations_dt_data():
+    """Get relations in jQuery datatable data format"""
 
     metadata = MetaData()
-    mo_data_table = Table(mo_name, metadata, autoload=True,autoload_with=db.engine, schema=schema_name)
-
-    fields = [c.name for c in mo_data_table.columns]
-
-    return jsonify(fields)
-
-
-@mod_managedobjects.route('/fields/<string:mo_vendor>/', methods=['GET'])
-@login_required
-def get_fields_in_mo_table_by_mo_name(mo_vendor):
-    """Get the column files in the managed objects cm data table"""
-
-    fields = []
-
-    vendor_name = mo_vendor.split("-")[1]
-    mo_name = mo_vendor.split("-")[0]
-
-    schema_name = None
-
-    if vendor_name.lower() == 'ericsson': schema_name = 'ericsson_cm'
-    if vendor_name.lower() == 'huawei': schema_name = 'huawei_cm'
-    if vendor_name.lower() == 'zte': schema_name = 'zte_cm'
-    if vendor_name.lower() == 'nokia': schema_name = 'nokia_cm'
-
-    mo_table_name = "{0}.{1}".format(schema_name,mo_name)
-    app.logger.info(mo_table_name)
-
-    metadata = MetaData()
-    mo_data_table = Table(mo_name, metadata, autoload=True,autoload_with=db.engine, schema=schema_name)
-
-    fields = [c.name for c in mo_data_table.columns]
-
-    return jsonify(fields)
-
-
-@mod_managedobjects.route('/dt/<string:mo_vendor>/', methods=['GET'])
-@login_required
-def get_mo_dt_data(mo_vendor):
-    """Get managed objects values in jQuery datatables format"""
-
-    metadata = MetaData()
-
-    vendor_name = mo_vendor.split("-")[1]
-    mo_name = mo_vendor.split("-")[0]
-
-    schema_name = None
-
-    if vendor_name.lower() == 'ericsson': schema_name = 'ericsson_cm'
-    if vendor_name.lower() == 'huawei': schema_name = 'huawei_cm'
-    if vendor_name.lower() == 'zte': schema_name = 'zte_cm'
-    if vendor_name.lower() == 'nokia': schema_name = 'nokia_cm'
-
-    # app.logger.info(schema_name)
-    mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
+    relations_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
 
     columns = []
-    column_index = 0
-    for c in mo_data_table.columns:
-        search_method = 'string_contains'
-        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
-            search_method = 'regex'
-        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
-        column_index += 1
+    for c in relations_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
 
-    query = db.session.query(mo_data_table)
+    query = db.session.query(relations_table)
 
     # GET request parameters
     params = request.args.to_dict()
@@ -245,40 +89,438 @@ def get_mo_dt_data(mo_vendor):
     return jsonify(row_table.output_result())
 
 
-@mod_managedobjects.route('/dt/<int:mo_pk>/', methods=['GET'])
+@mod_netmgt.route('/live/nodes', methods=['GET'])
 @login_required
-def get_dt_data(mo_pk):
-    """Get managed objects values in jQuery datatables format"""
+def get_nodes():
+    """Get a list of all the nodes in the system"""
 
-    # Get the vendor and technology pk's
-    # managedobject = ManagedObject.query.filter_by(pk=mo_pk).first()
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
     metadata = MetaData()
-    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
-    managedobject = db.session.query(managedobject_table).filter_by(pk=mo_pk).first()
-
-    vendor_pk = managedobject.vendor_pk
-    tech_pk = managedobject.tech_pk
-    mo_name = managedobject.name
-
-    # Get the schema
-    managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
-    schema_name = managedobject_schema.name.lower()
-
-    if vendor_pk == 2: schema_name = 'huawei_cm'
-
-    # app.logger.info(schema_name)
-    mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
+    nodes_table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
 
     columns = []
     column_index = 0
-    for c in mo_data_table.columns:
+    for c in nodes_table.columns:
         search_method = 'string_contains'
         if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
             search_method = 'regex'
         columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
         column_index += 1
 
-    query = db.session.query(mo_data_table)
+    query = db.session.query(nodes_table).filter(nodes_table.columns.nodename != 'SubNetwork')
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/list/<entity>', methods=['GET'])
+@login_required
+def get_entity_list(entity):
+    length = request.args.get("length",100)
+    start = request.args.get("start", 0)
+    parent_id = request.args.get("parent_id", None)
+
+    fields = request.args.get("fields", "")
+    metadata = MetaData()
+
+    table = None
+    columns = []
+    data = []
+    count = 0
+    specific_cols = fields.split(",")
+    if entity == 'node':
+        table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+        query = db.session.query(table.columns.id, table.columns.nodename, table.columns.vendor, table.columns.technology).\
+            filter(table.columns.nodename != 'SubNetwork')
+
+    count = query.count()
+
+    for row in query.all():
+        data.append({"id": row[0], "name": row[1], "vendor": row[2], "technology": row[3]})
+
+    return jsonify({"data": data, "total": count, "start": start, "length": length})
+
+
+@mod_netmgt.route('/live/nodes/fields', methods=['GET'])
+@login_required
+def get_node_view_fields():
+    """Get a list of all the nodes in the system"""
+
+    metadata = MetaData()
+    table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/sites/fields', methods=['GET'])
+@login_required
+def get_site_view_fields():
+    """Get a list of all the nodes in the system"""
+
+    metadata = MetaData()
+    table = Table('vw_sites', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/cells/gsm/fields', methods=['GET'])
+@login_required
+def get_gsm_cell_view_fields():
+    """Get the list of fields in the GSM cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/cells/umts/fields', methods=['GET'])
+@login_required
+def get_umts_cell_view_fields():
+    """Get the list of fields in the UMTS cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/cells/lte/fields', methods=['GET'])
+@login_required
+def get_lte_cell_view_fields():
+    """Get the list of fields in the LTE cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/relations/fields', methods=['GET'])
+@login_required
+def get_relations_view_fields():
+    """Get a list of all the nodes in the system"""
+
+    metadata = MetaData()
+    table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/sites', methods=['GET'])
+@login_required
+def get_sites():
+    """Get a list of all the vendors in the system"""
+
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
+    metadata = MetaData()
+    sites_table = Table('vw_sites', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    column_index = 0
+    for c in sites_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
+
+    query = db.session.query(sites_table)
+
+    row_table = DataTables(params, query, columns, True)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/relations', methods=['GET'])
+@login_required
+def get_relations():
+    """Get a list of all network relations"""
+
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
+    metadata = MetaData()
+    relations_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    column_index = 0
+    for c in relations_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
+
+    query = db.session.query(relations_table)
+
+    row_table = DataTables(params, query, columns)
+
+    app.logger.info(params)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/cell/<int:cell_id>', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cell_data(cell_id):
+
+    cell_data_table = None
+    metadata = MetaData()
+
+    # cell = LiveCell.query.filter(pk=cell_id).first()
+    cell = db.session.query(LiveCell).filter_by(pk=cell_id).first()
+
+    if cell is None:
+        return jsonify({}, 404)
+    # UMTS Cells
+    if cell.tech_pk == 2:
+        cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # GSM Cells
+    if cell.tech_pk == 1:
+        cell_data_table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # LTE Cells
+    if cell.tech_pk == 3:
+        cell_data_table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    cell_data = db.session.query(cell_data_table).filter_by(cellname=cell.name).first()
+
+    return jsonify(cell_data._asdict())
+
+
+@mod_netmgt.route('/live/cellrelations/<int:cell_id>', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cell_relations(cell_id):
+
+    cell_data_table = None
+    metadata = MetaData()
+
+    # cell = LiveCell.query.filter(pk=cell_id).first()
+    cell = db.session.query(LiveCell).filter_by(pk=cell_id).first()
+
+    app.logger.info("cell.name {}".format(cell.name))
+    if cell is None:
+        return jsonify({}, 404)
+
+    relation_table = Table('vw_relations', metadata, autoload=True, autoload_with=db.engine,
+                            schema='live_network')
+
+    cell_data = db.session.query(relation_table).filter(or_(
+                                     relation_table.columns.svrcell==cell.name, \
+                                     relation_table.columns.nbrcell == cell.name
+                                 )).all()
+
+    columns = [c.name for c in relation_table.columns]
+
+    response_data = [{k: v for k, v in zip(columns, row)} for row in cell_data]
+
+    return jsonify(response_data)
+
+
+@mod_netmgt.route('/live/cells', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cells():
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
+    metadata = MetaData()
+
+    cell_data_table = Table('cells', metadata, autoload=True, autoload_with=db.engine,
+                            schema='live_network')
+
+    columns = []
+    column_index = 0
+    for c in cell_data_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
+
+    query = db.session.query(cell_data_table)
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/cells/<tech>', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cells_data(tech):
+    """Get sites in jQuery datatable data format"""
+
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
+    tech_pk = request.args.get("tech_pk", "2")  # Default is 3G
+
+    cell_data_table = None
+
+    metadata = MetaData()
+
+    # UMTS Cells
+    if tech == "umts":
+        cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # GSM Cells
+    if tech == "gsm":
+        cell_data_table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # LTE Cells
+    if tech == "lte":
+        cell_data_table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    columns = []
+    column_index = 0
+    for c in cell_data_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
+
+    query = db.session.query(cell_data_table)
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/externals/gsm/fields', methods=['GET'])
+@login_required
+def get_gsm_externals_view_fields():
+    """Get the list of fields in the LTE cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_gsm_external_cells', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/externals/umts/fields', methods=['GET'])
+@login_required
+def get_umts_externals_view_fields():
+    """Get the list of fields in the LTE cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_umts_external_cells', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/externals/lte/fields', methods=['GET'])
+@login_required
+def get_lte_externals_view_fields():
+    """Get the list of fields in the LTE cell data view"""
+
+    metadata = MetaData()
+    table = Table('vw_lte_external_cells', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    fields = [c.name for c in table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/externals/<tech>', methods=['GET'], strict_slashes=False)
+@login_required
+def get_external_cells_data(tech):
+    """Get external cells parameter data in jQuery datatable data format"""
+
+    params = request.args.to_dict()
+    params['draw']=1
+    params['length'] = request.args.get("length",10)
+    params['start'] = request.args.get("start", 0)
+
+    if tech == 'gsm': tech_pk = 1
+    if tech == 'umts': tech_pk = 2
+    if tech == 'lte': tech_pk = 3
+
+    cell_data_table = None
+
+    metadata = MetaData()
+
+    # UMTS External Cells
+    if tech == "umts":
+        cell_data_table = Table('vw_umts_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # GSM External Cells
+    if tech == "gsm":
+        cell_data_table = Table('vw_gsm_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # LTE External Cells
+    if tech == "lte":
+        cell_data_table = Table('vw_lte_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    if cell_data_table is None:
+        return jsonify([])
+
+    columns = []
+    for c in cell_data_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(cell_data_table)
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+
+@mod_netmgt.route('/nodes/dt', methods=['GET'], strict_slashes=False)
+@login_required
+def get_nodes_dt_data():
+    """Get nodes in jQuery datatable data format"""
+
+    metadata = MetaData()
+    nodes_table = Table('vw_nodes', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    columns = []
+    for c in nodes_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(nodes_table)
 
     # GET request parameters
     params = request.args.to_dict()
@@ -288,44 +530,198 @@ def get_dt_data(mo_pk):
     return jsonify(row_table.output_result())
 
 
-@mod_managedobjects.route('/download/<int:mo_pk>/', methods=['GET'])
-# @login_required
-def download_managed_object_data(mo_pk):
-    """Download managed object data"""
+@mod_netmgt.route('/sites/dt', methods=['GET'], strict_slashes=False)
+@login_required
+def get_site_dt_data():
+    """Get sites in jQuery datatable data format"""
 
-    # Get the vendor and technology pk's
     metadata = MetaData()
-    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
-    managedobject = db.session.query(managedobject_table).filter_by(pk=mo_pk).first()
+    sites_table = Table('vw_sites', metadata, autoload=True, autoload_with=db.engine, schema='live_network')
 
-    vendor_pk = managedobject.vendor_pk
-    tech_pk = managedobject.tech_pk
-    mo_name = managedobject.name
 
-    # Get the schema
-    managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
-    schema_name = managedobject_schema.name.lower()
+    columns = []
+    for c in sites_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
 
-    if vendor_pk == 2: schema_name = 'huawei_cm'
+    query = db.session.query(sites_table)
 
-    # app.logger.info(schema_name)
-    mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
+    # GET request parameters
+    params = request.args.to_dict()
 
-    sanitized_filename = "{}".format(mo_name )
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/cells/fields', methods=['GET'], strict_slashes=False)
+@login_required
+def get_network_cells_field_list():
+    """Get field list"""
+    fields = []
+
+    tech_pk = request.args.get("tech_pk","2") # Default is 3G
+    cell_data_table = None
+
+    if tech_pk == "1":
+        metadata = MetaData()
+        cell_data_table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    if tech_pk == "2":
+        metadata = MetaData()
+        cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    if tech_pk == "3":
+        metadata = MetaData()
+        cell_data_table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    if cell_data_table is None:
+        return jsonify([])
+
+    fields = [c.name for c in cell_data_table.columns]
+
+    return jsonify(fields)
+
+
+@mod_netmgt.route('/live/cells/dt', methods=['GET'], strict_slashes=False)
+@login_required
+def get_cells_dt_data():
+    """Get sites in jQuery datatable data format"""
+
+    tech_pk = request.args.get("tech_pk", "2")  # Default is 3G
+
+    cell_data_table = None
+
+    metadata = MetaData()
+
+    # UMTS Cells
+    if tech_pk == "2":
+        cell_data_table = Table('vw_umts_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # GSM Cells
+    if tech_pk == "1":
+        cell_data_table = Table('vw_gsm_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # LTE Cells
+    if tech_pk == "3":
+        cell_data_table = Table('vw_lte_cells_data', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+
+    columns = []
+    for c in cell_data_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(cell_data_table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/live/extcells/fields', methods=['GET'], strict_slashes=False)
+@login_required
+def get_network_extcells_field_list():
+    """Get external cells field/parameter """
+    fields = []
+
+    tech_pk = request.args.get("tech_pk","2") # Default is 3G
+    cell_data_table = None
+
+    if tech_pk == "1":
+        metadata = MetaData()
+        cell_data_table = Table('vw_gsm_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    if tech_pk == "2":
+        metadata = MetaData()
+        cell_data_table = Table('vw_umts_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    if cell_data_table is None:
+        return jsonify([])
+
+    fields = [c.name for c in cell_data_table.columns]
+
+    return jsonify(fields)
+
+
+
+@mod_netmgt.route('/live/extcells/dt', methods=['GET'], strict_slashes=False)
+@login_required
+def get_external_cells_dt_data():
+    """Get external cells parameter data in jQuery datatable data format"""
+
+    tech_pk = request.args.get("tech_pk", "2")  # Default is 3G
+
+    cell_data_table = None
+
+    metadata = MetaData()
+
+    # UMTS External Cells
+    if tech_pk == "2":
+        cell_data_table = Table('vw_umts_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    # GSM External Cells
+    if tech_pk == "1":
+        cell_data_table = Table('vw_gsm_external_cells', metadata, autoload=True, autoload_with=db.engine,
+                                schema='live_network')
+
+    if cell_data_table is None:
+        return jsonify([])
+
+    columns = []
+    for c in cell_data_table.columns:
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name))
+
+    query = db.session.query(cell_data_table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_netmgt.route('/download/<entity_types>', methods=['GET'], strict_slashes=False)
+def download_network_entities(entity_types):
+    """Download  network entities """
+    metadata = MetaData()
+
+    entity_table_map = {"nodes":"nodes", "sites": "vw_sites", "relations":"vw_relations"}
+
+    table_name = entity_types  # nodes,
+
+    if entity_types in entity_table_map:
+        table_name = entity_table_map[entity_types]  # nodes,
+
+    table = Table( table_name, metadata, autoload=True, autoload_with=db.engine, schema='live_network')
+
+    sanitized_filename = "{}".format(entity_types.lower().replace(" ","_") )
     filename = "{}.csv".format(sanitized_filename)
     path_to_file = '/tmp/{}'.format(filename)
 
     outfile = open( path_to_file, 'wb')
     outcsv = csv.writer(outfile)
-    records = db.session.query(mo_data_table).all()
+    records = db.session.query(table).all()
 
-    # columns to skip
-    columns_to_skip = []
+    columns_to_skip = ['pk', 'added_by', 'modified_by','notes', 'tech_pk', 'vendor_pk']
 
-    outcsv.writerow([column.name for column in filter(lambda c: c.name not in columns_to_skip, mo_data_table.columns ) ])
+    outcsv.writerow([column.name.upper() for column in filter(lambda c: c.name not in columns_to_skip, table.columns ) ])
 
-    [outcsv.writerow([getattr(curr, column.name) for column in filter(lambda c: c.name not in columns_to_skip, mo_data_table.columns ) ]) for curr in records]
+    [outcsv.writerow([getattr(curr, column.name) for column in filter(lambda c: c.name not in columns_to_skip, table.columns ) ]) for curr in records]
+    # [outcsv.writerow([getattr(curr, column.name) for column in rule_table.columns]) for curr in records]
 
     outfile.close()
 
+    # return send_file(path_to_file, attachment_filename=filename, mimetype="text/plain")
     return send_file(path_to_file, attachment_filename=filename, mimetype='application/octet-stream', as_attachment=True,)
