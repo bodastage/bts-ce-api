@@ -111,12 +111,10 @@ def get_query_from_dt_request(request, report_query):
     dt_sql = dt_table.compile_query()
     dt_sql = dt_sql.replace('dummy_table.dummy_pk,','')
     dt_sql = dt_sql.replace('FROM dummy_table','FROM ({}) dt '.format(report_query))
-    app.logger.info(dt_sql)
 
     dt_filtered_sql = dt_table.compile_query(query=dt_table.filtered_query)
     dt_filtered_sql = dt_filtered_sql.replace('dummy_table.dummy_pk,','')
     dt_filtered_sql = dt_filtered_sql.replace('FROM dummy_table','FROM ({}) dt '.format(report_query))
-    app.logger.info(dt_filtered_sql)
 
     cardinality = db.engine.execute(text(report_query)).rowcount
     cardinality_filtered = db.engine.execute(text(dt_filtered_sql)).rowcount
