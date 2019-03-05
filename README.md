@@ -43,7 +43,7 @@ docker run \
 * [Online Documentation](http://docs.bodastage.com)
 
 ## Copyright / License
-Copyright 2017 - 2018 [Bodastage Solutions](http://www.bodastage.com)
+Copyright 2017 - 2019 [Bodastage Solutions](http://www.bodastage.com)
 
 Licensed under the Apache License, Version 2.0 ; you may not use this work except in compliance with the License. You may obtain a copy of the License in the LICENSE file, or at:
 
