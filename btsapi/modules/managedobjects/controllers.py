@@ -93,6 +93,36 @@ def get_mos(vendor, tech):
     return jsonify([mo_schema.dump(v).data for v in managedobjects],)
 
 
+@mod_managedobjects.route('/<vendor>', methods=['GET'])
+@login_required
+def get_mos_per_vendor(vendor):
+    metadata = MetaData()
+    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
+
+    managedobjects = None
+
+    if vendor.lower() == 'ericsson' :
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=1).with_entities("name").distinct().all()
+
+
+    if vendor.lower() == 'huawei':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=2).with_entities("name").distinct().all()
+
+
+    if vendor.lower() == 'zte':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=3).with_entities("name").distinct().all()
+
+    if vendor.lower() == 'nokia':
+        managedobjects = db.session.query(managedobject_table).filter_by(vendor_pk=4).with_entities("name").distinct().all()
+
+    if managedobjects is None:
+        return jsonify([])
+
+    mo_schema = NormalizedManagedObjectsSchema()
+
+    return jsonify([mo_schema.dump(v).data for v in managedobjects],)
+
+
 @mod_managedobjects.route('/tree/cached', methods=['GET'])
 @login_required
 def get_cached_mo_tree():
@@ -148,49 +178,6 @@ def get_fields_in_mo_table(mo_pk):
     return jsonify(fields)
 
 
-@mod_managedobjects.route('/dt/<int:mo_pk>/', methods=['GET'])
-@login_required
-def get_dt_data(mo_pk):
-    """Get managed objects values in jQuery datatables format"""
-
-    # Get the vendor and technology pk's
-    # managedobject = ManagedObject.query.filter_by(pk=mo_pk).first()
-    metadata = MetaData()
-    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
-    managedobject = db.session.query(managedobject_table).filter_by(pk=mo_pk).first()
-
-    vendor_pk = managedobject.vendor_pk
-    tech_pk = managedobject.tech_pk
-    mo_name = managedobject.name
-
-    # Get the schema
-    managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
-    schema_name = managedobject_schema.name.lower()
-
-    if vendor_pk == 2: schema_name = 'huawei_cm'
-
-    # app.logger.info(schema_name)
-    mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
-
-    columns = []
-    column_index = 0
-    for c in mo_data_table.columns:
-        search_method = 'string_contains'
-        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
-            search_method = 'regex'
-        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
-        column_index += 1
-
-    query = db.session.query(mo_data_table)
-
-    # GET request parameters
-    params = request.args.to_dict()
-
-    row_table = DataTables(params, query, columns)
-
-    return jsonify(row_table.output_result())
-
-
 @mod_managedobjects.route('/fields/<string:mo_vendor>/', methods=['GET'])
 @login_required
 def get_fields_in_mo_table_by_mo_name(mo_vendor):
@@ -235,6 +222,49 @@ def get_mo_dt_data(mo_vendor):
     if vendor_name.lower() == 'huawei': schema_name = 'huawei_cm'
     if vendor_name.lower() == 'zte': schema_name = 'zte_cm'
     if vendor_name.lower() == 'nokia': schema_name = 'nokia_cm'
+
+    # app.logger.info(schema_name)
+    mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
+
+    columns = []
+    column_index = 0
+    for c in mo_data_table.columns:
+        search_method = 'string_contains'
+        if request.args.get("columns[{}][search][regex]".format(column_index)) == 'true':
+            search_method = 'regex'
+        columns.append(ColumnDT( c, column_name=c.name, mData=c.name, search_method=search_method))
+        column_index += 1
+
+    query = db.session.query(mo_data_table)
+
+    # GET request parameters
+    params = request.args.to_dict()
+
+    row_table = DataTables(params, query, columns)
+
+    return jsonify(row_table.output_result())
+
+
+@mod_managedobjects.route('/dt/<int:mo_pk>/', methods=['GET'])
+@login_required
+def get_dt_data(mo_pk):
+    """Get managed objects values in jQuery datatables format"""
+
+    # Get the vendor and technology pk's
+    # managedobject = ManagedObject.query.filter_by(pk=mo_pk).first()
+    metadata = MetaData()
+    managedobject_table = Table('normalized_managedobjects', metadata, autoload=True, autoload_with=db.engine)
+    managedobject = db.session.query(managedobject_table).filter_by(pk=mo_pk).first()
+
+    vendor_pk = managedobject.vendor_pk
+    tech_pk = managedobject.tech_pk
+    mo_name = managedobject.name
+
+    # Get the schema
+    managedobject_schema = ManagedObjectSchema.query.filter_by(vendor_pk=vendor_pk, tech_pk=tech_pk).first()
+    schema_name = managedobject_schema.name.lower()
+
+    if vendor_pk == 2: schema_name = 'huawei_cm'
 
     # app.logger.info(schema_name)
     mo_data_table = Table(mo_name, metadata, autoload=True, autoload_with=db.engine, schema=schema_name)
