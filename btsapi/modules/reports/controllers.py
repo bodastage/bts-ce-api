@@ -111,10 +111,12 @@ def get_query_from_dt_request(request, report_query):
     dt_sql = dt_table.compile_query()
     dt_sql = dt_sql.replace('dummy_table.dummy_pk,','')
     dt_sql = dt_sql.replace('FROM dummy_table','FROM ({}) dt '.format(report_query))
+    app.logger.info(dt_sql)
 
     dt_filtered_sql = dt_table.compile_query(query=dt_table.filtered_query)
     dt_filtered_sql = dt_filtered_sql.replace('dummy_table.dummy_pk,','')
     dt_filtered_sql = dt_filtered_sql.replace('FROM dummy_table','FROM ({}) dt '.format(report_query))
+    app.logger.info(dt_filtered_sql)
 
     cardinality = db.engine.execute(text(report_query)).rowcount
     cardinality_filtered = db.engine.execute(text(dt_filtered_sql)).rowcount
@@ -148,13 +150,19 @@ def get_report_data(report_id):
 def download_report(report_id):
     try:
 
+        report = db.session.query(Report).filter_by(pk=report_id).one()
+        category = db.session.query(ReportCategory).filter_by(pk=report.category_pk).one()
+
+        sanitized_filename = "{}__{}".format(category.name.lower().replace(" ", "_"), report.name.lower().replace(" ", "_"))
+        filename = "{}.csv".format(sanitized_filename)
+
         metadata  =MetaData()
 
         # task_log = Table('reports_task_log', metadata, autoload=True, autoload_with=db.engine, schema="reports")
         task_log = ReportsTaskLog()
         task_log.action = 'reports.generate'
         task_log.status = 'PENDING'
-        task_log.options = '{}'
+        task_log.options = {'format': 'csv', 'filename': filename, 'query': report.query}
 
         db.session.add(task_log)
         db.session.commit()
@@ -176,7 +184,7 @@ def download_report(report_id):
 
         channel.queue_declare(queue='reports', durable=True)
 
-        data = json.dumps({'report_id': report_id, 'task_id': task_id})
+        data = json.dumps({'task_id': task_id})
         channel.basic_publish(exchange='',
                               routing_key='reports',
                               body=data)
