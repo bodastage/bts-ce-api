@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from btsapi.extensions import db, ma
 import datetime
 from sqlalchemy import Table, MetaData, inspect
+from sqlalchemy.dialects import postgresql
 
 metadata = MetaData()
 
@@ -16,7 +17,7 @@ class Report(db.Model):
     notes = db.Column('notes', db.Text)
     query = db.Column(db.Text)
     db_connector_pk = db.Column('db_connector_pk', db.Integer)
-    options = db.Column('options', db.Text)  # JSON
+    options = db.Column('options', postgresql.JSON)  # JSON
     category_pk = db.Column('category_pk', db.Integer)
     modified_by = db.Column(db.Integer)
     added_by = db.Column(db.Integer)
@@ -45,7 +46,7 @@ class ReportsTaskLog(db.Model):
     pk = db.Column(db.Integer, db.Sequence('seq_reports_task_log_pk', schema='reports'), primary_key=True, nullable=False)
     action = db.Column('action', db.String(200), nullable=False)  # reports.generate
     log = db.Column('log', db.Text)
-    options = db.Column('options', db.Text)
+    options = db.Column('options', postgresql.JSON)
     status = db.Column('status', db.String(200))  # FAILED,RUNNING,PENDING,STARTED,FINISHED
     modified_by = db.Column(db.Integer, default=0)
     added_by = db.Column(db.Integer, default=0)
