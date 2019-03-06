@@ -3,6 +3,8 @@ from flask import Blueprint, request, render_template, \
                   jsonify, make_response, send_file
 from btsapi.modules.networkaudit.models import AuditCategory, \
     AuditRule, AuditCategoryMASchema
+from btsapi.modules.reports.models import Report, ReportCategory, \
+    ReportCategoryMASchema, DummyTable, ReportsTaskLog, ReportMASchema
 from btsapi.extensions import db
 import datetime
 from datatables import DataTables, ColumnDT
@@ -10,6 +12,10 @@ from flask_login import login_required
 from btsapi import  app
 from sqlalchemy import Table, MetaData
 import csv
+import pika
+import os
+import json
+
 
 mod_networkaudit = Blueprint('netaudit', __name__, url_prefix='/api/networkaudit')
 
@@ -120,28 +126,51 @@ def get_rule_data(audit_id):
 def download_rule_data(rule_id):
     """Download rule table """
 
-    rule = AuditRule.query.filter_by(pk=rule_id).first()
-    category = AuditCategory.query.filter_by(pk=rule.category_pk).first()
+    try:
 
-    metadata = MetaData()
-    rule_table = Table( rule.table_name, metadata, autoload=True, autoload_with=db.engine, schema='network_audit')
+        rule = db.session.query(AuditRule).filter_by(pk=rule_id).one()
+        category = db.session.query(AuditCategory).filter_by(pk=rule.category_pk).one()
 
-    sanitized_filename = "{}__{}".format(category.name.lower().replace(" ","_"), rule.name.lower().replace(" ","_") )
-    filename = "{}.csv".format(sanitized_filename)
-    path_to_file = '/tmp/{}'.format(filename)
+        sanitized_filename = "{}__{}".format(category.name.lower().replace(" ", "_"), rule.name.lower().replace(" ", "_"))
+        filename = "{}.csv".format(sanitized_filename)
 
-    outfile = open( path_to_file, 'wb')
-    outcsv = csv.writer(outfile)
-    records = db.session.query(rule_table).all()
+        metadata  =MetaData()
 
-    columns_to_skip = ['pk', 'added_by', 'modified_by']
+        query = "SELECT * FROM network_audit.{} t".format(rule.table_name)
+        task_log = ReportsTaskLog()
+        task_log.action = 'reports.generate'
+        task_log.status = 'PENDING'
+        task_log.options = {'format': 'csv', 'filename': filename, 'query': query}
 
-    outcsv.writerow([column.name.upper() for column in filter(lambda c: c.name not in columns_to_skip, rule_table.columns ) ])
+        db.session.add(task_log)
+        db.session.commit()
+        db.session.flush()
+        task_id = task_log.pk
 
-    [outcsv.writerow([getattr(curr, column.name) for column in filter(lambda c: c.name not in columns_to_skip, rule_table.columns ) ]) for curr in records]
-    # [outcsv.writerow([getattr(curr, column.name) for column in rule_table.columns]) for curr in records]
+        # Send download task to reports queue
 
-    outfile.close()
+        mq_user = os.getenv("BTS_MQ_USER", "btsuser")
+        mq_pass = os.getenv("BTS_MQ_PASS", "Password@7")
+        mq_host = os.getenv("BTS_MQ_HOST", "192.168.99.100")
+        mq_vhost = os.getenv("BTS_MQ_VHOST", "/bs")
 
-    # return send_file(path_to_file, attachment_filename=filename, mimetype="text/plain")
-    return send_file(path_to_file, attachment_filename=filename, mimetype='application/octet-stream', as_attachment=True,)
+        credentials = pika.PlainCredentials(mq_user, mq_pass)
+        parameters = pika.ConnectionParameters(mq_host, virtual_host=mq_vhost, credentials=credentials)
+
+        connection = pika.BlockingConnection(parameters)
+        channel = connection.channel()
+
+        channel.queue_declare(queue='reports', durable=True)
+
+        data = json.dumps({'task_id': task_id})
+        channel.basic_publish(exchange='',
+                              routing_key='reports',
+                              body=data)
+        channel.close()
+
+        return jsonify({'status': 'success',
+                        'message': 'Download request received.',
+                        'status_url': '/api/reports/download/status/{}'.format(task_id),
+                        'download_url': '/api/reports/file/{}'.format(task_id)} )
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Failed to start download', 'error': str(e)}),404
