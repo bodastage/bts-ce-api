@@ -260,7 +260,8 @@ def create_or_update_report():
             report = Report(name=content['name'],
                             category_pk=content['category_id'],
                             query=content['qry'],
-                            notes=content['notes'])
+                            notes=content['notes'],
+                            options=content['options'])
 
             db.session.add(report)
             db.session.commit()
@@ -382,3 +383,25 @@ def delete_category(id):
     except Exception as e:
         db.session.rollback()
         return jsonify(str(e)), 400
+
+
+@mod_reports.route('/graphdata/<int:report_id>', methods=['GET'])
+@login_required
+def get_graph_data(report_id):
+    """
+    Get graph data for report of type Graph
+
+    :param report_id:
+    :return:
+    """
+    report = db.session.query(Report).filter_by(pk=report_id).first()
+
+    #@TODO: Add check for report type
+
+    table_columns = db.engine.execute(text(report.query)).keys()
+    result = db.engine.execute(text(report.query))
+
+    data_results = [{k: v for k, v in zip(
+        table_columns, row)} for row in result.fetchall()]
+
+    return jsonify(data_results)
