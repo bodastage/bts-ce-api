@@ -190,8 +190,8 @@ def download_report(report_id):
                               body=data)
         channel.close()
 
-        return jsonify({'status': 'success',
-                        'message': 'Download request received.',
+        return jsonify({'status': 'PENDING', # Job status
+                        'message': 'Download job logged.',
                         'status_url': '/api/reports/download/status/{}'.format(task_id),
                         'download_url': '/api/reports/file/{}'.format(task_id)} )
     except Exception as e:
