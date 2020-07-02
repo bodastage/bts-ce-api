@@ -6,8 +6,8 @@ from btsapi.extensions import db
 import datetime
 from sqlalchemy import text
 from flask_login import login_required
+from btsapi import app
 
-# Define the blueprint: 'auth', set its url prefix: app.url/auth
 mod_vendors = Blueprint('vendors', __name__, url_prefix='/api/vendors')
 
 
@@ -17,8 +17,8 @@ def get_vendors():
     """Get a list of all the vendors in the system"""
 
     vendor_schema = VendorSchema()
-
-    return jsonify( [vendor_schema.dump(v).data for v in Vendor.query.all()] )
+	
+    return jsonify([vendor_schema.dump(v) for v in Vendor.query.all()])
 
 
 @mod_vendors.route('/<int:id>', methods=['GET'])
@@ -28,7 +28,7 @@ def get_vendor(id):
 
     vendor_schema = VendorSchema()
 
-    return jsonify(vendor_schema.dump(Vendor.query.get(id)).data)
+    return jsonify(vendor_schema.dump(Vendor.query.get(id)))
 
 
 @mod_vendors.route('/<int:id>', methods=['PUT'])

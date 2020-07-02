@@ -41,7 +41,7 @@ class ManagedObjectSchema(db.Model):
     date_modified = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
 
 
-class ManagedObjectsMASchema(ma.ModelSchema):
+class ManagedObjectsMASchema(ma.Schema):
     """Flask Marshmallow Schema for Managed objects model"""
     class Meta:
         model = ManagedObject
@@ -53,7 +53,7 @@ class NormalizedManagedObjects(db.Model):
     pass
 
 
-class NormalizedManagedObjectsSchema(ma.ModelSchema):
+class NormalizedManagedObjectsSchema(ma.Schema):
     """Live network UMTS cells marshmallow model"""
     class Meta:
         model = NormalizedManagedObjects
