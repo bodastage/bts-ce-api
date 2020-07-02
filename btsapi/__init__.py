@@ -1,5 +1,5 @@
 # Import flask and template operators
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 from flask.sessions import SecureCookieSessionInterface
 from btsapi.extensions import db, ma, login_manager
 from flask_login import UserMixin
@@ -63,7 +63,8 @@ def load_user_from_header(req):
 
     token = token.replace('Bearer ', '', 1)
     try:
-        token = base64.b64decode(token)
+        #token = base64.b64decode(token)
+        token = base64.b64decode(bytes(token, 'utf-8')).decode("utf-8")
     except TypeError:
         pass
     user = User.query.filter_by(token=token).first()
@@ -139,3 +140,10 @@ app.register_blueprint(mod_reports)
 def not_found(error):
     return render_template('404.html'), 404
 
+@app.route('/')
+def index(name=None):
+    return render_template('index.html', name=name)
+	
+@app.route('/manifest.json')
+def manifest():
+	return send_from_directory('static', 'manifest.json')

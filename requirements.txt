@@ -5,7 +5,7 @@ sqlalchemy
 git+https://github.com/erssebaggala/sqlalchemy-datatables.git@per_column_regex_filter#egg=sqlalchemy-datatables
 flask-jsontools
 flask-marshmallow
-marshmallow-sqlalchemy
+marshmallow-sqlalchemy==0.23.1
 flask-bcrypt
 flask-testing
 flask-cors

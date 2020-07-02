@@ -37,7 +37,7 @@ class AuditRule(db.Model):
     sql = db.Column(db.Text)
 
 
-class AuditCategoryMASchema(ma.ModelSchema):
+class AuditCategoryMASchema(ma.Schema):
     """Flask Marshmallow Schema for Managed objects model"""
     class Meta:
         model = AuditCategory

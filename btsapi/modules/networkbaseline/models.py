@@ -18,7 +18,7 @@ class NetworkBaseline(db.Model):
     date_modified = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
 
 
-class NetworkBaselineSchema(ma.ModelSchema):
+class NetworkBaselineSchema(ma.Schema):
     """Network Base line marshmallow schema"""
     class Meta:
         model = NetworkBaseline
@@ -38,7 +38,7 @@ class NetworkBaselineView(db.Model):
     date_modified = db.Column(db.String(50))
 
 
-class NetworkBaselineViewSchema(ma.ModelSchema):
+class NetworkBaselineViewSchema(ma.Schema):
     """Network Baseline view marshmallow schema"""
     class Meta:
         model = NetworkBaselineView

@@ -17,7 +17,7 @@ def get_technologies():
 
     technology_schema = TechnologySchema()
 
-    return jsonify( [technology_schema.dump(v).data for v in Technology.query.all()] )
+    return jsonify( [technology_schema.dump(v) for v in Technology.query.all()] )
 
 
 @mod_technologies.route('/<int:id>', methods=['GET'])

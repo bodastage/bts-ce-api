@@ -68,7 +68,7 @@ class Setting(db.Model):
     category_id = db.Column(db.String(200))
 
 
-class SettingMASchema(ma.ModelSchema):
+class SettingMASchema(ma.Schema):
     """Settings marshmallow schema"""
     value = marshmallow.fields.Method("get_actual_value")
     id = marshmallow.fields.Method("get_id")
@@ -113,7 +113,7 @@ class SupportedVendorTech(db.Model):
         self.vendor_pk = vendor_pk
 
 
-class CMFileFormatsMASchema(ma.ModelSchema):
+class CMFileFormatsMASchema(ma.Schema):
     """CM File Format marshmallow schema"""
     class Meta:
         model = CMFileFormats

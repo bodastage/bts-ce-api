@@ -20,9 +20,9 @@ def authenticate_user():
 
     if user is not None:
         ma_schema = UserSchema()
-        user_data = ma_schema.dump(user).data
+        user_data = ma_schema.dump(user)
         user_data['id'] = user.pk
-        user_data['token'] = base64.b64encode(user.token)
+        user_data['token'] = base64.b64encode(bytes(user.token, 'utf-8')).decode("utf-8")
 
         del user_data['pk']
 

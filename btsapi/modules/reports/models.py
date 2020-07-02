@@ -54,7 +54,7 @@ class ReportsTaskLog(db.Model):
     date_modified = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
 
 
-class ReportMASchema(ma.ModelSchema):
+class ReportMASchema(ma.Schema):
     class Meta:
         model = Report
         fields = ('name', 'notes', 'category_id','id', 'query', 'options')
@@ -62,7 +62,7 @@ class ReportMASchema(ma.ModelSchema):
     id = ma.Integer(attribute="pk")
     category_id = ma.Integer(attribute="category_pk")
 
-class ReportCategoryMASchema(ma.ModelSchema):
+class ReportCategoryMASchema(ma.Schema):
     class Meta:
         model = ReportCategory
 

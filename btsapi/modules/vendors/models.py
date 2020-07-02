@@ -24,7 +24,7 @@ class Vendor(db.Model):
         self.added_by = added_by
 
 
-class VendorSchema(ma.ModelSchema):
+class VendorSchema(ma.SQLAlchemyAutoSchema):
     """Flask Marshmallow Schema for Vendor model"""
     class Meta:
         model = Vendor

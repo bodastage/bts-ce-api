@@ -23,7 +23,7 @@ class Technology(db.Model):
         self.added_by = added_by
 
 
-class TechnologySchema(ma.ModelSchema):
+class TechnologySchema(ma.SQLAlchemyAutoSchema):
     """Flask Marshmallow Schema for Technology model"""
     class Meta:
         model = Technology

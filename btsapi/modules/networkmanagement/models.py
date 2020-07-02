@@ -31,7 +31,7 @@ class LiveCell3G(db.Model):
     pass
 
 
-class LiveCell3GMASchema(ma.ModelSchema):
+class LiveCell3GMASchema(ma.Schema):
     """Live network UMTS cells marshmallow model"""
     class Meta:
         model = LiveCell3G

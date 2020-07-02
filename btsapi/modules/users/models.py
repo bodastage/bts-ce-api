@@ -48,7 +48,7 @@ class User(db.Model):
     def get_id(self):
         return str(self.email)
 
-class UserSchema(ma.ModelSchema):
+class UserSchema(ma.Schema):
     """Flask Marshmallow Schema for Vendor model"""
 
     class Meta:

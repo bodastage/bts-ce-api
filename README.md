@@ -10,6 +10,27 @@ REST API for Boda Telecom Suite Communtiy Edition (BTS-CE). BTS-CE is an open so
 - [PostgreSQL](https://www.postgresql.org/)
 - [Flask-SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.3/)
 
+## Running
+* 
+```
+# Install dependencies
+pip install -r requirements.txt 
+
+# Set Database connection details
+export BTS_DB_USER=bodastage
+export BTS_DB_PASS=password
+export BTS_DB_HOST=localhost
+export BTS_DB_PORT=5432
+export BTS_DB_NAME=bts
+
+# Run server
+python run.py 
+
+#
+python run.py --port=<PORT> --server=<HOST IP>
+```
+*
+
 ## Running docker container manually
 
 ### Dockerhub container registry
