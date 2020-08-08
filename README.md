@@ -11,10 +11,12 @@ REST API for Boda Telecom Suite Communtiy Edition (BTS-CE). BTS-CE is an open so
 - [Flask-SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.3/)
 
 ## Running
-* 
 ```
 # Install dependencies
 pip install -r requirements.txt 
+
+# Run migrations
+flask db migrate 
 
 # Set Database connection details
 export BTS_DB_USER=bodastage
@@ -29,7 +31,7 @@ python run.py
 #
 python run.py --port=<PORT> --server=<HOST IP>
 ```
-*
+
 
 ## Running docker container manually
 
