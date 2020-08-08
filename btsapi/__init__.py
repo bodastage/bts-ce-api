@@ -1,7 +1,7 @@
 # Import flask and template operators
 from flask import Flask, render_template, request, send_from_directory
 from flask.sessions import SecureCookieSessionInterface
-from btsapi.extensions import db, ma, login_manager
+from btsapi.extensions import db, ma, login_manager, migrate
 from flask_login import UserMixin
 from flask_cors import CORS
 import base64
@@ -41,7 +41,8 @@ def create_app():
     # by modules and controllers
     db.init_app(app) #flask_sqlalchemy
     ma.init_app(app) #flask_marshmallow
-
+    migrate.init_app(app, db)
+	
     # Enable CORS -- Remove this if not useful
     CORS(app,  origins="*")
 

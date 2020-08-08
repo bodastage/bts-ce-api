@@ -16,3 +16,4 @@ requests
 Flask-SQLAlchemy
 pika
 Flask-Script
+Flask-Migrate
